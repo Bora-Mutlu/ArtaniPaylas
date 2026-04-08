@@ -1,0 +1,51 @@
+﻿@model IReadOnlyCollection<Request>
+@{
+    ViewData["Title"] = "Giden Talepler";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title">Gönderdiğim Talepler</h1>
+        <p class="ap-subtitle">Talep durumlarını buradan takip edebilirsin.</p>
+    </div>
+</section>
+
+@if (!Model.Any())
+{
+    <div class="ap-empty">Henüz bir talep göndermedin.</div>
+}
+else
+{
+    <div class="ap-card p-3">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 ap-table">
+                <thead>
+                    <tr>
+                        <th>İlan</th>
+                        <th>İlan Sahibi</th>
+                        <th>Durum</th>
+                        <th>Tarih</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Listing?.Title</td>
+                        <td>@(item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName)</td>
+                        <td>@item.Status.ToDisplayText()</td>
+                        <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>
+                            @if (item.Status == RequestStatus.Delivered)
+                            {
+                                <a asp-controller="Reviews" asp-action="Create" asp-route-requestId="@item.Id" class="btn btn-sm ap-btn-outline">Değerlendir</a>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

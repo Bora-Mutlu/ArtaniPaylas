@@ -1,0 +1,23 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# User/IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Local git backup folder created during repo migration
+**/.git_backup/
+
+# Runtime uploads (user-generated files)
+ArtaniPaylas.Web/wwwroot/uploads/
+docs/
+
+# Logs and temp
+*.log
+*.tmp
+
+# Local exported report artifact
+Artani Paylas - 6 Haftalik Proje Raporu.pdf

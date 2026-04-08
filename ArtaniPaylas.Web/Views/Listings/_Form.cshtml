@@ -1,0 +1,42 @@
+﻿@model ListingCreateEditViewModel
+
+<div class="ap-card p-4">
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label fw-semibold">Başlık</label>
+        <input asp-for="Title" class="form-control" placeholder="Örn: Günlük taze sebze paketi" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label fw-semibold">Açıklama</label>
+        <textarea asp-for="Description" class="form-control ap-no-resize" rows="5" placeholder="Paket içeriği, teslim saati ve notlarını yazabilirsin."></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="ExpirationDate" class="form-label fw-semibold">Son Tüketim Tarihi</label>
+            <input asp-for="ExpirationDate" class="form-control" type="date" />
+            <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Location" class="form-label fw-semibold">Konum</label>
+            <input asp-for="Location" class="form-control" placeholder="Örn: Üsküdar" />
+            <span asp-validation-for="Location" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <label asp-for="Photo" class="form-label fw-semibold">Fotoğraf</label>
+        <input asp-for="Photo" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+        <small class="text-muted">En fazla 5 MB. Desteklenen formatlar: JPG, PNG, WEBP.</small>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ExistingPhotoPath))
+    {
+        <div class="mt-3">
+            <p class="mb-2 fw-semibold">Mevcut Fotoğraf</p>
+            <img src="@Model.ExistingPhotoPath" alt="Mevcut fotoğraf" class="rounded-3" style="max-height: 220px;" />
+        </div>
+    }
+</div>

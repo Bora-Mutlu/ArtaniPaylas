@@ -1,0 +1,20 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Hata";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title text-danger">Bir hata oluþtu</h1>
+        <p class="ap-subtitle">Ýþleminiz tamamlanamadý. Lütfen tekrar deneyin.</p>
+    </div>
+</section>
+
+<div class="ap-card p-4">
+    @if (Model.ShowRequestId)
+    {
+        <p class="mb-2"><strong>Ýstek Kimliði:</strong> <code>@Model.RequestId</code></p>
+    }
+
+    <p class="mb-0 text-muted">Sorun devam ederse bu kimlikle teknik kayýtlarý inceleyebiliriz.</p>
+</div>
