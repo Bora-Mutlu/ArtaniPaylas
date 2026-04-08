@@ -1,0 +1,24 @@
+@model ListingCreateEditViewModel
+@{
+    ViewData["Title"] = "Ýlan Düzenle";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title">Ýlan Düzenle</h1>
+        <p class="ap-subtitle">Ýlan bilgilerini güncelleyerek daha doðru eþleþmeler alabilirsin.</p>
+    </div>
+</section>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data" class="space-y-4">
+    <input type="hidden" asp-for="Id" />
+    <partial name="_Form" model="Model" />
+    <div class="d-flex gap-2">
+        <button class="btn ap-btn-primary" type="submit">Deðiþiklikleri Kaydet</button>
+        <a asp-action="MyListings" class="btn ap-btn-outline">Ýptal</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

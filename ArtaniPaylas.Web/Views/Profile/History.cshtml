@@ -1,0 +1,109 @@
+@model ProfileHistoryViewModel
+@{
+    ViewData["Title"] = "Geçmiþ Ýþlemler";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title">Geçmiþ Ýþlemler</h1>
+        <p class="ap-subtitle">Teslim geçmiþi ve deðerlendirmeleri tek ekranda gör.</p>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="ap-card p-4 h-100">
+            <h2 class="h5 mb-3">Teslim Ettiklerim</h2>
+            @if (!Model.DeliveredIncomingRequests.Any())
+            {
+                <div class="ap-empty">Kayýt bulunmuyor.</div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in Model.DeliveredIncomingRequests)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                            <span>@item.Listing?.Title - @(item.RequesterUser?.FullName ?? item.RequesterUser?.UserName)</span>
+                            <a asp-controller="Reviews" asp-action="Create" asp-route-requestId="@item.Id" class="btn btn-sm ap-btn-outline">Deðerlendir</a>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="ap-card p-4 h-100">
+            <h2 class="h5 mb-3">Teslim Aldýklarým</h2>
+            @if (!Model.DeliveredOutgoingRequests.Any())
+            {
+                <div class="ap-empty">Kayýt bulunmuyor.</div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in Model.DeliveredOutgoingRequests)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                            <span>@item.Listing?.Title - @(item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName)</span>
+                            <a asp-controller="Reviews" asp-action="Create" asp-route-requestId="@item.Id" class="btn btn-sm ap-btn-outline">Deðerlendir</a>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="ap-card p-4 h-100">
+            <h2 class="h5 mb-3">Aldýðým Deðerlendirmeler</h2>
+            @if (!Model.ReceivedReviews.Any())
+            {
+                <div class="ap-empty">Henüz deðerlendirme yok.</div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var review in Model.ReceivedReviews)
+                    {
+                        <li class="list-group-item">
+                            <strong>@review.Rating/5</strong> - @(review.FromUser?.FullName ?? review.FromUser?.UserName)
+                            @if (!string.IsNullOrWhiteSpace(review.Comment))
+                            {
+                                <div class="text-muted">@review.Comment</div>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="ap-card p-4 h-100">
+            <h2 class="h5 mb-3">Verdiðim Deðerlendirmeler</h2>
+            @if (!Model.GivenReviews.Any())
+            {
+                <div class="ap-empty">Henüz deðerlendirme vermedin.</div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var review in Model.GivenReviews)
+                    {
+                        <li class="list-group-item">
+                            <strong>@review.Rating/5</strong> - @(review.ToUser?.FullName ?? review.ToUser?.UserName)
+                            @if (!string.IsNullOrWhiteSpace(review.Comment))
+                            {
+                                <div class="text-muted">@review.Comment</div>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>

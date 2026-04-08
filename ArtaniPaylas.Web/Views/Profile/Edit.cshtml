@@ -1,0 +1,66 @@
+﻿@model ProfileEditViewModel
+@{
+    ViewData["Title"] = "Profili Düzenle";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title">Profili Düzenle</h1>
+        <p class="ap-subtitle">İlan açabilmek için profil bilgilerini eksiksiz tut.</p>
+    </div>
+</section>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data" class="space-y-4">
+    <div class="ap-card p-4">
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label fw-semibold">Ad Soyad *</label>
+            <input asp-for="FullName" class="form-control" placeholder="Örn: Ahmet Yılmaz" maxlength="50" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="PhoneNumber" class="form-label fw-semibold">Telefon Numarası *</label>
+                <input asp-for="PhoneNumber" class="form-control" placeholder="05xx xxx xx xx" maxlength="20" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Age" class="form-label fw-semibold">Yaş *</label>
+                <input asp-for="Age" class="form-control" type="number" min="13" max="99" placeholder="18" />
+                <span asp-validation-for="Age" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3 mt-3">
+            <label asp-for="Location" class="form-label fw-semibold">Konum *</label>
+            <input asp-for="Location" class="form-control" placeholder="İl / İlçe" maxlength="100" />
+            <span asp-validation-for="Location" class="text-danger"></span>
+        </div>
+
+        <div class="ap-card p-3 mt-3">
+            <p class="mb-2 fw-semibold">Profil Fotoğrafı</p>
+            <div class="mb-3">
+                <label for="profileImageFile" class="form-label">Cihazdan Yükle</label>
+                <input id="profileImageFile" name="profileImageFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                @Html.ValidationMessage("profileImageFile", null, new { @class = "text-danger d-block" })
+                <small class="text-muted">En fazla 5 MB. JPG, PNG, WEBP desteklenir.</small>
+            </div>
+
+            <div>
+                <label asp-for="ProfileImageUrl" class="form-label">Veya Görsel Linki Gir</label>
+                <input asp-for="ProfileImageUrl" class="form-control" placeholder="https://..." />
+                <span asp-validation-for="ProfileImageUrl" class="text-danger"></span>
+                <small class="text-muted">İlan açabilmek için profil fotoğrafı gerekli.</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn ap-btn-primary" type="submit">Kaydet</button>
+        <a asp-action="Index" class="btn ap-btn-outline">İptal</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

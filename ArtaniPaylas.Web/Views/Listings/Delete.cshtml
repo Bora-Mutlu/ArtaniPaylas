@@ -1,0 +1,22 @@
+@model Listing
+@{
+    ViewData["Title"] = "Ýlan Sil";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title text-danger">Ýlaný Sil</h1>
+        <p class="ap-subtitle">Bu iþlem geri alýnamaz. Silmeden önce emin ol.</p>
+    </div>
+</section>
+
+<div class="ap-card p-4 mb-3">
+    <h2 class="h5 mb-2">@Model.Title</h2>
+    <p class="mb-0 text-muted">@Model.Description</p>
+</div>
+
+<form asp-action="Delete" method="post" class="d-flex gap-2">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Kalýcý Olarak Sil</button>
+    <a asp-action="MyListings" class="btn ap-btn-outline">Vazgeç</a>
+</form>

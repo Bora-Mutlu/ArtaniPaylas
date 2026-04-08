@@ -1,0 +1,81 @@
+﻿@model IReadOnlyCollection<Request>
+@{
+    ViewData["Title"] = "Gelen Talepler";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title">Gelen Talepler</h1>
+        <p class="ap-subtitle">Talep satırına tıklayarak kullanıcı detaylarını açabilirsin.</p>
+    </div>
+</section>
+
+@if (!Model.Any())
+{
+    <div class="ap-empty">Henüz gelen talep bulunmuyor.</div>
+}
+else
+{
+    <div class="ap-card p-3">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 ap-table">
+                <thead>
+                    <tr>
+                        <th>İlan</th>
+                        <th>Talep Eden</th>
+                        <th>Durum</th>
+                        <th>Tarih</th>
+                        <th class="text-end">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    var collapseId = $"req-detail-{item.Id}";
+
+                    <tr class="ap-clickable-row" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId" style="cursor: pointer;">
+                        <td>@item.Listing?.Title</td>
+                        <td>@(item.RequesterUser?.FullName ?? item.RequesterUser?.UserName)</td>
+                        <td>@item.Status.ToDisplayText()</td>
+                        <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td class="text-end" onclick="event.stopPropagation();">
+                            @if (item.Status == RequestStatus.Pending)
+                            {
+                                <form asp-action="Approve" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button class="btn btn-sm btn-success">Onayla</button>
+                                </form>
+                                <form asp-action="Reject" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button class="btn btn-sm btn-outline-danger">Reddet</button>
+                                </form>
+                            }
+                            @if (item.Status == RequestStatus.Approved)
+                            {
+                                <form asp-action="MarkDelivered" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button class="btn btn-sm ap-btn-primary">Teslim Edildi</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="@collapseId">
+                        <td colspan="5" class="bg-light">
+                            <div class="p-3 border rounded-3 bg-white">
+                                <h6 class="mb-3">Kullanıcı Bilgileri</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4"><strong>İsim Soyisim:</strong> @(item.RequesterUser?.FullName ?? "-")</div>
+                                    <div class="col-md-4"><strong>Telefon:</strong> @(item.RequesterUser?.PhoneNumber ?? "-")</div>
+                                    <div class="col-md-4"><strong>E-posta:</strong> @(item.RequesterUser?.Email ?? "-")</div>
+                                    <div class="col-md-4"><strong>Yaş:</strong> @(item.RequesterUser?.Age?.ToString() ?? "-")</div>
+                                    <div class="col-md-8"><strong>Konum:</strong> @(item.RequesterUser?.Location ?? "-")</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

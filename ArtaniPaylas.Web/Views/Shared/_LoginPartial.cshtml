@@ -1,0 +1,45 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using ArtaniPaylas.Core.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var isSignedIn = SignInManager.IsSignedIn(User);
+    string displayName = string.Empty;
+
+    if (isSignedIn)
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+        displayName = currentUser?.FullName ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            displayName = currentUser?.UserName ?? User.Identity?.Name ?? "Profil";
+        }
+    }
+}
+
+<ul class="navbar-nav align-items-lg-center gap-2">
+@if (isSignedIn)
+{
+    <li class="nav-item">
+        <a class="nav-link ap-profile-link" asp-controller="Profile" asp-action="Index" title="Profil">
+            @displayName
+        </a>
+    </li>
+    <li class="nav-item">
+        <form class="d-inline" asp-area="" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button type="submit" class="btn btn-sm ap-nav-btn">Çıkış</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="btn btn-sm ap-nav-btn-ghost" asp-area="" asp-controller="Account" asp-action="Register">Kayıt Ol</a>
+    </li>
+    <li class="nav-item">
+        <a class="btn btn-sm ap-nav-btn" asp-area="" asp-controller="Account" asp-action="Login">Giriş</a>
+    </li>
+}
+</ul>

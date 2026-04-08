@@ -1,0 +1,80 @@
+﻿@model ListingsIndexViewModel
+@{
+    ViewData["Title"] = "İlanlar";
+}
+
+<section class="ap-page-head">
+    <div>
+        <h1 class="ap-title">Aktif Gıda İlanları</h1>
+        <p class="ap-subtitle">Konum ve başlığa göre filtrele, ihtiyacına uygun ilanı hızlıca bul.</p>
+    </div>
+    <a asp-action="Create" class="btn ap-btn-primary">+ Yeni İlan</a>
+</section>
+
+<div class="ap-card p-4 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4">
+            <label asp-for="Filter.SearchTitle" class="form-label fw-semibold">Başlık</label>
+            <input asp-for="Filter.SearchTitle" class="form-control" placeholder="Örn: Sebze paketi" />
+        </div>
+        <div class="col-lg-4">
+            <label asp-for="Filter.SearchLocation" class="form-label fw-semibold">Konum</label>
+            <input asp-for="Filter.SearchLocation" class="form-control" placeholder="Örn: Kadıköy" />
+        </div>
+        <div class="col-lg-2">
+            <div class="form-check mt-4">
+                <input asp-for="Filter.ActiveOnly" class="form-check-input" />
+                <label asp-for="Filter.ActiveOnly" class="form-check-label">Sadece aktif</label>
+            </div>
+        </div>
+        <div class="col-lg-2 d-grid">
+            <button type="submit" class="btn ap-btn-outline">Filtrele</button>
+        </div>
+    </form>
+</div>
+
+@if (!Model.Listings.Any())
+{
+    <div class="ap-empty">Filtre kriterlerine uygun ilan bulunamadı.</div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var listing in Model.Listings)
+        {
+            var statusClass = listing.Status switch
+            {
+                ListingStatus.Active => "ap-pill ap-pill-active",
+                ListingStatus.Completed => "ap-pill ap-pill-completed",
+                ListingStatus.Expired => "ap-pill ap-pill-danger",
+                _ => "ap-pill ap-pill-pending"
+            };
+
+            <div class="col-sm-6 col-xl-4">
+                <article class="ap-card h-100 overflow-hidden">
+                    @if (!string.IsNullOrWhiteSpace(listing.PhotoPath))
+                    {
+                        <img src="@listing.PhotoPath" class="w-100" style="height: 220px; object-fit: cover;" alt="@listing.Title" />
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center bg-light" style="height: 220px;">
+                            <span class="text-muted">Fotoğraf yok</span>
+                        </div>
+                    }
+                    <div class="p-4 d-flex flex-column gap-3">
+                        <div>
+                            <h2 class="h5 mb-1">@listing.Title</h2>
+                            <p class="text-muted mb-1">@listing.Location</p>
+                            <p class="mb-0"><small>Son Tüketim: @listing.ExpirationDate.ToString("dd.MM.yyyy")</small></p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mt-auto">
+                            <span class="@statusClass">@listing.Status.ToDisplayText()</span>
+                            <a asp-action="Details" asp-route-id="@listing.Id" class="btn btn-sm ap-btn-outline">Detaya Git</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+}

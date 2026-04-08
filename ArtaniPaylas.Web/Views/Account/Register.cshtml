@@ -1,0 +1,149 @@
+﻿@model ArtaniPaylas.Core.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<style>
+    .slide-in-left {
+        animation: slideInLeft 0.5s ease-out forwards;
+    }
+    .slide-in-right {
+        animation: slideInRight 0.5s ease-out forwards;
+    }
+    @@keyframes slideInLeft {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @@keyframes slideInRight {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .ap-auth-visual {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+</style>
+
+<section class="ap-auth-wrap">
+    <div class="container py-4 py-lg-5">
+        <div class="ap-auth-shell mx-auto">
+            <!-- GİRİŞ BİLGİ PANELİ SOLDA -->
+            <aside class="ap-auth-visual slide-in-left text-center" aria-hidden="true">
+                <span class="ap-auth-eyebrow text-uppercase fw-bold text-success d-inline-block mb-2">Artanı Paylaş</span>
+                <h2 class="ap-auth-visual-title h2 text-dark mt-3">Topluluğun bir parçası ol, ihtiyaçları birlikte çöz.</h2>
+                <p class="ap-auth-visual-text text-secondary mt-3 mb-4">Dakikalar içinde profilini oluştur, güvenli bir şekilde paylaşmaya başla.</p>
+                <div class="text-start ms-4 mb-4">
+                    <ul class="text-secondary small fw-medium">
+                        <li class="mb-2">Kolay hesap oluşturma</li>
+                        <li class="mb-2">Profil fotoğrafında dosya veya link seçeneği</li>
+                        <li class="mb-2">Anında topluluğa katılım</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-2 text-center pt-4 border-top border-secondary border-opacity-25 w-75 mx-auto">
+                    <p class="mb-3 small text-dark fw-bold">Zaten hesabın var mı?</p>
+                    <a href="/Account/Login?returnUrl=@Model.ReturnUrl" class="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm">Giriş Yap</a>
+                </div>
+            </aside>
+
+            <!-- KAYIT FORMU SAĞDA -->
+            <div class="ap-auth-card p-4 p-md-5 slide-in-right">
+                <header class="ap-auth-header mb-4">
+                    <span class="ap-auth-eyebrow text-primary fw-bold">Yeni Hesap</span>
+                    <h1 class="ap-auth-title h2 mb-2">Hızlıca Kayıt Ol</h1>
+                    <p class="text-muted mb-0 small">Bilgilerini gir, hesabını oluştur ve paylaşımlara hemen başla.</p>
+                </header>
+
+                <form method="post" asp-action="Register" asp-controller="Account" asp-route-returnUrl="@ViewData["ReturnUrl"]" enctype="multipart/form-data" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        var errors = ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Where(e => !string.IsNullOrWhiteSpace(e)).ToList();
+                        if (errors.Any())
+                        {
+                            <div class="alert alert-danger p-3 small mb-3 rounded" role="alert">
+                                <ul class="mb-0 ps-3 fw-bold">
+                                    @foreach (var error in errors)
+                                    {
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    }
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 ap-field py-1">
+                            <label asp-for="FullName" class="ap-field-label small fw-bold text-secondary">Ad Soyad</label>
+                            <input asp-for="FullName" class="form-control" maxlength="50" placeholder="Ahmet Yılmaz" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 ap-field py-1">
+                            <label asp-for="Email" class="ap-field-label small fw-bold text-secondary">E-posta</label>
+                            <input asp-for="Email" type="email" class="form-control" maxlength="120" autocomplete="email" placeholder="ornek@mail.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 ap-field py-1">
+                            <label asp-for="PhoneNumber" class="ap-field-label small fw-bold text-secondary">Telefon Numarası</label>
+                            <input asp-for="PhoneNumber" type="tel" class="form-control" maxlength="11" minlength="11" inputmode="numeric" placeholder="05xxxxxxxxx" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4 ap-field py-1">
+                            <label asp-for="Age" class="ap-field-label small fw-bold text-secondary">Yaş</label>
+                            <input asp-for="Age" type="number" class="form-control" min="13" max="99" placeholder="18" />
+                            <span asp-validation-for="Age" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-8 ap-field py-1">
+                            <label asp-for="Location" class="ap-field-label small fw-bold text-secondary">Konum</label>
+                            <input asp-for="Location" class="form-control" maxlength="100" placeholder="Şehir, İlçe" />
+                            <span asp-validation-for="Location" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="ap-upload-panel mt-3 mb-3 p-3 bg-light rounded border border-light">
+                        <h3 class="ap-upload-title h6 fw-bold mb-1">Profil Fotoğrafı</h3>
+                        <p class="ap-upload-subtitle small text-muted mb-3">Sadece cihazdan fotoğraf seçebilirsiniz.</p>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="ProfileImageFile" class="ap-field-label small fw-bold text-secondary">Cihazdan Seç</label>
+                                <input asp-for="ProfileImageFile" type="file" id="fileInput" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp" />
+                                <span asp-validation-for="ProfileImageFile" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-4">
+                        <div class="col-md-6 ap-field py-1">
+                            <label asp-for="Password" class="ap-field-label small fw-bold text-secondary">Şifre</label>
+                            <input asp-for="Password" type="password" class="form-control" id="registerPassword" autocomplete="new-password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 ap-field py-1">
+                            <label asp-for="ConfirmPassword" class="ap-field-label small fw-bold text-secondary">Şifre Tekrar</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" id="registerConfirmPassword" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold text-uppercase">Kayıt İşlemini Tamamla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+}
+
+

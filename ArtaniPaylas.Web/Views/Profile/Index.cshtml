@@ -1,0 +1,227 @@
+﻿@model ProfileIndexViewModel
+@{
+    ViewData["Title"] = "Profil";
+
+    var displayName = Model.User.FullName ?? Model.User.UserName ?? "Kullanıcı";
+    var profileImageUrl = string.IsNullOrWhiteSpace(Model.User.ProfileImageUrl) ? null : Model.User.ProfileImageUrl;
+    var locationText = string.IsNullOrWhiteSpace(Model.User.Location) ? "Belirtilmemiş" : Model.User.Location;
+
+    var listingsCount = Model.MyListings.Count;
+    var incomingCount = Model.IncomingRequests.Count;
+    var outgoingCount = Model.OutgoingRequests.Count;
+
+    var initials = "AP";
+    var nameParts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    if (nameParts.Length == 1 && nameParts[0].Length > 0)
+    {
+        initials = char.ToUpperInvariant(nameParts[0][0]).ToString();
+    }
+    else if (nameParts.Length >= 2 && nameParts[0].Length > 0 && nameParts[1].Length > 0)
+    {
+        initials = $"{char.ToUpperInvariant(nameParts[0][0])}{char.ToUpperInvariant(nameParts[1][0])}";
+    }
+}
+
+<section class="mb-6">
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">Profilim</h1>
+    <p class="mt-2 text-sm sm:text-base text-slate-600">Hesap bilgilerin, ilanların ve taleplerin tek yerde.</p>
+</section>
+
+<div class="relative mb-6 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-xl">
+    <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-emerald-200 opacity-40 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-16 -left-12 h-56 w-56 rounded-full bg-amber-200 opacity-30 blur-3xl"></div>
+
+    <div class="relative p-5 sm:p-7 lg:p-8">
+        <div class="grid gap-7 lg:grid-cols-12 lg:items-stretch">
+            <div class="lg:col-span-4">
+                @if (profileImageUrl is not null)
+                {
+                    <div class="group relative h-56 overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50 shadow-lg sm:h-72 lg:h-full lg:min-h-[25rem]">
+                        <img src="@profileImageUrl"
+                             alt="@displayName profil fotoğrafı"
+                             class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                             loading="lazy"
+                             onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                        <div class="d-none h-full w-full bg-gradient-to-br from-emerald-100 to-green-200 text-6xl font-black tracking-wide text-emerald-800 flex items-center justify-center">@initials</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="h-56 w-full rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-100 to-green-200 text-6xl font-black tracking-wide text-emerald-800 shadow-lg flex items-center justify-center sm:h-72 lg:h-full lg:min-h-[25rem]">@initials</div>
+                }
+            </div>
+
+            <div class="lg:col-span-5 min-w-0">
+                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+                    Topluluk Profili
+                </span>
+                <h2 class="mt-3 text-2xl sm:text-3xl font-black text-slate-900 break-words">@displayName</h2>
+                <p class="mt-2 text-slate-600">Profil kartın ve işlem özetlerin burada. Bilgilerini güncel tutarak daha hızlı eşleşme alabilirsin.</p>
+
+                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">E-posta</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900 break-words">@Model.User.Email</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Telefon</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900">@(Model.User.PhoneNumber ?? "Belirtilmemiş")</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Yaş</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900">@(Model.User.Age?.ToString() ?? "Belirtilmemiş")</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Konum</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900 break-words">@locationText</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3">
+                <div class="grid grid-cols-3 gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-2 mb-4">
+                    <div class="rounded-xl border border-slate-100 bg-white px-2 py-2 text-center transition duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                        <p class="text-lg font-black text-slate-900">@listingsCount</p>
+                        <p class="text-xs text-slate-500">İlan</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-100 bg-white px-2 py-2 text-center transition duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                        <p class="text-lg font-black text-slate-900">@incomingCount</p>
+                        <p class="text-xs text-slate-500">Gelen</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-100 bg-white px-2 py-2 text-center transition duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                        <p class="text-lg font-black text-slate-900">@outgoingCount</p>
+                        <p class="text-xs text-slate-500">Giden</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <a asp-action="Edit" class="inline-flex items-center justify-center rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-700 transition hover:-translate-y-0.5 hover:bg-emerald-50 hover:shadow-md">
+                        Profili Düzenle
+                    </a>
+                    <a asp-action="History" class="ap-profile-history-btn inline-flex items-center justify-center rounded-2xl border border-emerald-600 bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md">
+                        Geçmiş İşlemler
+                    </a>
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                        Güven puanı: @Model.User.TrustScore.ToString("0.00")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="nav mb-4 flex flex-wrap gap-3" id="profileTabs" role="tablist">
+    <button class="ap-profile-tab-btn active w-full sm:w-auto" data-bs-toggle="tab" data-bs-target="#profile-listings" type="button" role="tab" aria-controls="profile-listings" aria-selected="true">
+        <svg class="ap-profile-tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+        <span>İlanlarım</span>
+    </button>
+
+    <button class="ap-profile-tab-btn w-full sm:w-auto" data-bs-toggle="tab" data-bs-target="#profile-incoming" type="button" role="tab" aria-controls="profile-incoming" aria-selected="false">
+        <svg class="ap-profile-tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h14m0 0-4-4m4 4-4 4" />
+        </svg>
+        <span>Gelen Talepler</span>
+    </button>
+
+    <button class="ap-profile-tab-btn w-full sm:w-auto" data-bs-toggle="tab" data-bs-target="#profile-outgoing" type="button" role="tab" aria-controls="profile-outgoing" aria-selected="false">
+        <svg class="ap-profile-tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H6m0 0 4-4m-4 4 4 4" />
+        </svg>
+        <span>Giden Talepler</span>
+    </button>
+</div>
+
+<div class="tab-content rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-lg">
+    <div class="tab-pane fade show active" id="profile-listings" role="tabpanel">
+        @if (!Model.MyListings.Any())
+        {
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-slate-500">Henüz ilanın yok.</div>
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var listing in Model.MyListings)
+                {
+                    var statusBadgeClass = listing.Status switch
+                    {
+                        ListingStatus.Active => "border-emerald-200 bg-emerald-100 text-emerald-700",
+                        ListingStatus.Completed => "border-sky-200 bg-sky-100 text-sky-700",
+                        _ => "border-rose-200 bg-rose-100 text-rose-700"
+                    };
+
+                    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0">
+                            <p class="truncate text-base font-bold text-slate-900">@listing.Title</p>
+                            <p class="mt-1 text-sm text-slate-500">Konum: @listing.Location</p>
+                        </div>
+                        <span class="inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-bold @statusBadgeClass">@listing.Status.ToDisplayText()</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="tab-pane fade" id="profile-incoming" role="tabpanel">
+        @if (!Model.IncomingRequests.Any())
+        {
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-slate-500">Gelen talep yok.</div>
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var item in Model.IncomingRequests)
+                {
+                    var statusBadgeClass = item.Status switch
+                    {
+                        RequestStatus.Pending => "border-amber-200 bg-amber-100 text-amber-700",
+                        RequestStatus.Approved => "border-emerald-200 bg-emerald-100 text-emerald-700",
+                        RequestStatus.Delivered => "border-sky-200 bg-sky-100 text-sky-700",
+                        _ => "border-rose-200 bg-rose-100 text-rose-700"
+                    };
+
+                    var requesterName = item.RequesterUser?.FullName ?? item.RequesterUser?.UserName ?? "Kullanıcı";
+                    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0">
+                            <p class="truncate text-base font-bold text-slate-900">@(item.Listing?.Title ?? "İlan")</p>
+                            <p class="mt-1 text-sm text-slate-500">Talep sahibi: @requesterName</p>
+                        </div>
+                        <span class="inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-bold @statusBadgeClass">@item.Status.ToDisplayText()</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="tab-pane fade" id="profile-outgoing" role="tabpanel">
+        @if (!Model.OutgoingRequests.Any())
+        {
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-slate-500">Giden talep yok.</div>
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var item in Model.OutgoingRequests)
+                {
+                    var statusBadgeClass = item.Status switch
+                    {
+                        RequestStatus.Pending => "border-amber-200 bg-amber-100 text-amber-700",
+                        RequestStatus.Approved => "border-emerald-200 bg-emerald-100 text-emerald-700",
+                        RequestStatus.Delivered => "border-sky-200 bg-sky-100 text-sky-700",
+                        _ => "border-rose-200 bg-rose-100 text-rose-700"
+                    };
+
+                    var ownerName = item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName ?? "Kullanıcı";
+                    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0">
+                            <p class="truncate text-base font-bold text-slate-900">@(item.Listing?.Title ?? "İlan")</p>
+                            <p class="mt-1 text-sm text-slate-500">İlan sahibi: @ownerName</p>
+                        </div>
+                        <span class="inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-bold @statusBadgeClass">@item.Status.ToDisplayText()</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
