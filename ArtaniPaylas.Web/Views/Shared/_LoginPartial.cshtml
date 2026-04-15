@@ -1,45 +1,44 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using ArtaniPaylas.Core.Entities
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-@{
-    var isSignedIn = SignInManager.IsSignedIn(User);
-    string displayName = string.Empty;
-
-    if (isSignedIn)
-    {
-        var currentUser = await UserManager.GetUserAsync(User);
-        displayName = currentUser?.FullName ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(displayName))
-        {
-            displayName = currentUser?.UserName ?? User.Identity?.Name ?? "Profil";
-        }
-    }
-}
-
-<ul class="navbar-nav align-items-lg-center gap-2">
-@if (isSignedIn)
+<ul class="ap-auth-list">
+@if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a class="nav-link ap-profile-link" asp-controller="Profile" asp-action="Index" title="Profil">
-            @displayName
-        </a>
-    </li>
-    <li class="nav-item">
-        <form class="d-inline" asp-area="" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button type="submit" class="btn btn-sm ap-nav-btn">Çıkış</button>
+    var user = await UserManager.GetUserAsync(User);
+    var isAdmin = false;
+    if (user != null) {
+        isAdmin = await UserManager.IsInRoleAsync(user, "Admin");
+    }
+
+    if(isAdmin)
+    {
+        <li>
+            <a class="ap-auth-pill ap-auth-admin" href="/Admin">Admin Paneli</a>
+        </li>
+    }
+    else
+    {
+        <li>
+            <a class="ap-auth-pill ap-auth-primary" href="/UserDashboard">Panelim</a>
+        </li>
+    }
+
+    <li>
+        <form class="m-0" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="ap-auth-link">Cikis</button>
         </form>
     </li>
 }
 else
 {
-    <li class="nav-item">
-        <a class="btn btn-sm ap-nav-btn-ghost" asp-area="" asp-controller="Account" asp-action="Register">Kayıt Ol</a>
+    <li>
+        <a class="ap-auth-link" asp-area="" asp-controller="Account" asp-action="Register">Kayit Ol</a>
     </li>
-    <li class="nav-item">
-        <a class="btn btn-sm ap-nav-btn" asp-area="" asp-controller="Account" asp-action="Login">Giriş</a>
+    <li>
+        <a class="ap-auth-pill ap-auth-primary" asp-area="" asp-controller="Account" asp-action="Login">Giris Yap</a>
     </li>
 }
 </ul>

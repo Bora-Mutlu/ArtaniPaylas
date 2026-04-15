@@ -6,7 +6,6 @@ using ArtaniPaylas.Core.ViewModels;
 using ArtaniPaylas.Data;
 
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.EntityFrameworkCore;
@@ -22,18 +21,15 @@ public class ListingsController : Controller
     private readonly ApplicationDbContext _context;
     private readonly IListingStatusService _listingStatusService;
     private readonly IWebHostEnvironment _environment;
-    private readonly UserManager<ApplicationUser> _userManager;
 
     public ListingsController(
         ApplicationDbContext context,
         IListingStatusService listingStatusService,
-        IWebHostEnvironment environment,
-        UserManager<ApplicationUser> userManager)
+        IWebHostEnvironment environment)
     {
         _context = context;
         _listingStatusService = listingStatusService;
         _environment = environment;
-        _userManager = userManager;
     }
 
     [AllowAnonymous]
@@ -95,20 +91,8 @@ public class ListingsController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> Create()
+    public IActionResult Create()
     {
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser is null)
-        {
-            return Challenge();
-        }
-
-        if (string.IsNullOrWhiteSpace(currentUser.ProfileImageUrl))
-        {
-            TempData["ErrorMessage"] = "�lan olu�turmadan �nce profil foto�raf� eklemen gerekiyor.";
-            return RedirectToAction("Edit", "Profile");
-        }
-
         return View(new ListingCreateEditViewModel());
     }
 
@@ -126,18 +110,6 @@ public class ListingsController : Controller
         if (userId is null)
         {
             return Challenge();
-        }
-
-        var currentUser = await _userManager.FindByIdAsync(userId);
-        if (currentUser is null)
-        {
-            return Challenge();
-        }
-
-        if (string.IsNullOrWhiteSpace(currentUser.ProfileImageUrl))
-        {
-            TempData["ErrorMessage"] = "�lan olu�turmadan �nce profil foto�raf� eklemen gerekiyor.";
-            return RedirectToAction("Edit", "Profile");
         }
 
         var listing = new Listing
@@ -183,7 +155,7 @@ public class ListingsController : Controller
 
         if (listing.Status != ListingStatus.Active)
         {
-            TempData["ErrorMessage"] = "Kapanan veya tamamlanan ilanlar d�zenlenemez.";
+            TempData["ErrorMessage"] = "Kapanan veya tamamlanan ilanlar düzenlenemez.";
             return RedirectToAction(nameof(MyListings));
         }
 
@@ -223,7 +195,7 @@ public class ListingsController : Controller
 
         if (listing.Status != ListingStatus.Active)
         {
-            TempData["ErrorMessage"] = "Kapanan veya tamamlanan ilanlar d�zenlenemez.";
+            TempData["ErrorMessage"] = "Kapanan veya tamamlanan ilanlar düzenlenemez.";
             return RedirectToAction(nameof(MyListings));
         }
 
@@ -253,7 +225,7 @@ public class ListingsController : Controller
 
         await _context.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = "�lan g�ncellendi.";
+        TempData["SuccessMessage"] = "İlan güncellendi.";
         return RedirectToAction(nameof(MyListings));
     }
 
@@ -293,12 +265,12 @@ public class ListingsController : Controller
         _context.Listings.Remove(listing);
         await _context.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = "�lan silindi.";
+        TempData["SuccessMessage"] = "İlan silindi.";
         return RedirectToAction(nameof(MyListings));
     }
 
     [Authorize]
-    public async Task<IActionResult> MyListings()
+    public async Task<IActionResult> MyListings(bool activeOnly = false)
     {
         await _listingStatusService.UpdateExpiredListingsAsync();
 
@@ -308,12 +280,96 @@ public class ListingsController : Controller
             return Challenge();
         }
 
-        var listings = await _context.Listings
-            .Where(x => x.OwnerUserId == userId)
+        var query = _context.Listings
+            .Where(x => x.OwnerUserId == userId);
+
+        if (activeOnly)
+        {
+            query = query.Where(x => x.Status == ListingStatus.Active);
+        }
+
+        var listings = await query
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
+        ViewBag.ActiveOnly = activeOnly;
+
         return View(listings);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Report(int id, string reason, string? returnUrl = null)
+    {
+        var reporterId = GetCurrentUserId();
+        if (string.IsNullOrWhiteSpace(reporterId))
+        {
+            return Challenge();
+        }
+
+        var listing = await _context.Listings.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        if (listing is null)
+        {
+            TempData["ErrorMessage"] = "Şikayet etmek istediğiniz ilan bulunamadı.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (listing.OwnerUserId == reporterId)
+        {
+            TempData["ErrorMessage"] = "Kendi ilanınızı şikayet edemezsiniz.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var cleanedReason = reason?.Trim();
+        if (string.IsNullOrWhiteSpace(cleanedReason))
+        {
+            TempData["ErrorMessage"] = "Lütfen şikayet nedeninizi yazınız.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        if (cleanedReason.Length > 500)
+        {
+            TempData["ErrorMessage"] = "Şikayet metni en fazla 500 karakter olabilir.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var alreadyReported = await _context.Reports
+            .AsNoTracking()
+            .AnyAsync(x => x.ReporterId == reporterId && x.ReportedListingId == id);
+
+        if (alreadyReported)
+        {
+            TempData["ErrorMessage"] = "Bu ilan için zaten şikayet oluşturdunuz.";
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var report = new Report
+        {
+            ReporterId = reporterId,
+            ReportedListingId = id,
+            Reason = cleanedReason,
+            Status = ReportStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Reports.Add(report);
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Şikayetiniz admin ekibine iletildi.";
+
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     private bool IsOwner(Listing listing)
@@ -335,7 +391,7 @@ public class ListingsController : Controller
 
         if (photo.Length > MaxPhotoSizeBytes)
         {
-            return (null, "Foto�raf en fazla 5 MB olabilir.");
+            return (null, "Fotoğraf en fazla 5 MB olabilir.");
         }
 
         var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "listings");
@@ -345,13 +401,13 @@ public class ListingsController : Controller
         if (string.IsNullOrWhiteSpace(extension) ||
             !AllowedPhotoExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
         {
-            return (null, "Sadece JPG, PNG ve WEBP dosyalar� y�kleyebilirsin.");
+            return (null, "Sadece JPG, PNG ve WEBP dosyaları yükleyebilirsin.");
         }
 
         if (string.IsNullOrWhiteSpace(photo.ContentType) ||
             !AllowedPhotoContentTypes.Contains(photo.ContentType, StringComparer.OrdinalIgnoreCase))
         {
-            return (null, "Ge�ersiz dosya tipi tespit edildi.");
+            return (null, "Geçersiz dosya tipi tespit edildi.");
         }
 
         var fileName = $"{Guid.NewGuid()}{extension}";

@@ -1,6 +1,12 @@
-﻿@model IReadOnlyCollection<Request>
+@model IReadOnlyCollection<Request>
 @{
     ViewData["Title"] = "Gelen Talepler";
+    Layout = "_UserLayout";
+
+    var totalCount = Model.Count;
+    var pendingCount = Model.Count(x => x.Status == RequestStatus.Pending);
+    var approvedCount = Model.Count(x => x.Status == RequestStatus.Approved);
+    var deliveredCount = Model.Count(x => x.Status == RequestStatus.Delivered);
 }
 
 <section class="ap-page-head">
@@ -9,6 +15,33 @@
         <p class="ap-subtitle">Talep satırına tıklayarak kullanıcı detaylarını açabilirsin.</p>
     </div>
 </section>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Toplam Talep</small>
+            <div class="h4 mt-2 mb-0">@totalCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Bekleyen</small>
+            <div class="h4 mt-2 mb-0 text-warning">@pendingCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Onaylanan</small>
+            <div class="h4 mt-2 mb-0 text-success">@approvedCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Teslim Edilen</small>
+            <div class="h4 mt-2 mb-0 text-primary">@deliveredCount</div>
+        </div>
+    </div>
+</div>
 
 @if (!Model.Any())
 {
@@ -32,18 +65,25 @@ else
                 @foreach (var item in Model)
                 {
                     var collapseId = $"req-detail-{item.Id}";
+                    var statusClass = item.Status switch
+                    {
+                        RequestStatus.Pending => "ap-pill ap-pill-pending",
+                        RequestStatus.Approved => "ap-pill ap-pill-active",
+                        RequestStatus.Delivered => "ap-pill ap-pill-completed",
+                        _ => "ap-pill ap-pill-danger"
+                    };
 
-                    <tr class="ap-clickable-row" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId" style="cursor: pointer;">
+                    <tr class="ap-clickable-row ap-request-row" data-target-row="@collapseId" aria-expanded="false" style="cursor: pointer;" role="button" tabindex="0">
                         <td>@item.Listing?.Title</td>
                         <td>@(item.RequesterUser?.FullName ?? item.RequesterUser?.UserName)</td>
-                        <td>@item.Status.ToDisplayText()</td>
+                        <td><span class="@statusClass">@item.Status.ToDisplayText()</span></td>
                         <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                         <td class="text-end" onclick="event.stopPropagation();">
                             @if (item.Status == RequestStatus.Pending)
                             {
                                 <form asp-action="Approve" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@item.Id" />
-                                    <button class="btn btn-sm btn-success">Onayla</button>
+                                    <button class="btn btn-sm ap-btn-primary">Onayla</button>
                                 </form>
                                 <form asp-action="Reject" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@item.Id" />
@@ -59,9 +99,9 @@ else
                             }
                         </td>
                     </tr>
-                    <tr class="collapse" id="@collapseId">
-                        <td colspan="5" class="bg-light">
-                            <div class="p-3 border rounded-3 bg-white">
+                    <tr id="@collapseId" class="ap-request-detail-row d-none">
+                        <td colspan="5" class="bg-light p-0">
+                            <div class="p-3 border rounded-3 bg-white m-2">
                                 <h6 class="mb-3">Kullanıcı Bilgileri</h6>
                                 <div class="row g-3">
                                     <div class="col-md-4"><strong>İsim Soyisim:</strong> @(item.RequesterUser?.FullName ?? "-")</div>
@@ -79,3 +119,36 @@ else
         </div>
     </div>
 }
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const requestRows = document.querySelectorAll(".ap-request-row");
+
+            requestRows.forEach(function (row) {
+                const targetId = row.getAttribute("data-target-row");
+                const detailRow = document.getElementById(targetId);
+
+                if (!detailRow) {
+                    return;
+                }
+
+                const toggleRow = function () {
+                    const willOpen = detailRow.classList.contains("d-none");
+                    detailRow.classList.toggle("d-none");
+                    row.setAttribute("aria-expanded", willOpen ? "true" : "false");
+                };
+
+                row.addEventListener("click", toggleRow);
+
+                row.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        toggleRow();
+                    }
+                });
+            });
+        });
+    </script>
+}
+

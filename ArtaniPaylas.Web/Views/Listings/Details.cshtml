@@ -3,8 +3,11 @@
 @{
     ViewData["Title"] = "İlan Detayı";
     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    Layout = isAuthenticated ? "_UserLayout" : "_Layout";
     var isOwner = currentUserId == Model.OwnerUserId;
-    var canRequest = User.Identity?.IsAuthenticated == true && !isOwner && Model.Status == ListingStatus.Active;
+    var canRequest = isAuthenticated && !isOwner && Model.Status == ListingStatus.Active;
+    var canReport = isAuthenticated && !isOwner;
 
     var statusClass = Model.Status switch
     {
@@ -41,11 +44,25 @@
                         <button type="submit" class="btn ap-btn-primary">Talep Et</button>
                     </form>
                 }
-                else if (User.Identity?.IsAuthenticated != true)
+                else if (!isAuthenticated)
                 {
                     <div class="ap-empty">Talep göndermek için giriş yapmalısın.</div>
                 }
             </div>
+
+            @if (canReport)
+            {
+                <div class="mt-4 pt-3 border-top">
+                    <h3 class="h6 fw-bold mb-2">İlanı Şikayet Et</h3>
+                    <form asp-action="Report" method="post" class="d-flex flex-column gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="returnUrl" value="@($"/Listings/Details/{Model.Id}")" />
+                        <textarea name="reason" class="form-control ap-no-resize" rows="3" maxlength="500" placeholder="Şikayet nedeninizi yazın" required></textarea>
+                        <button type="submit" class="btn btn-danger align-self-start">Şikayet Et</button>
+                    </form>
+                </div>
+            }
         </div>
     </div>
 

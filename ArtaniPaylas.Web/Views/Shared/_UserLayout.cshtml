@@ -1,0 +1,254 @@
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+@{
+    var path = Context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+    var isDashboard = path == "/userdashboard" || path == "/userdashboard/index";
+    var isMyListings = path.StartsWith("/listings/mylistings") || path.StartsWith("/listings/edit") || path.StartsWith("/listings/delete");
+    var isAllListings = path == "/listings" || path.StartsWith("/listings/index") || path.StartsWith("/listings/details");
+    var isCreateListing = path.StartsWith("/listings/create");
+    var isIncoming = path.StartsWith("/requests/incoming");
+    var isOutgoing = path.StartsWith("/requests/outgoing") || path.StartsWith("/reviews/create");
+    var isProfile = path.StartsWith("/profile");
+
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    var displayName = currentUser?.FullName ?? currentUser?.UserName ?? User?.Identity?.Name;
+    if (string.IsNullOrWhiteSpace(displayName))
+    {
+        displayName = "Bireysel Kullanıcı";
+    }
+
+    var profileImageUrl = !string.IsNullOrWhiteSpace(currentUser?.ProfileImageUrl)
+        ? currentUser.ProfileImageUrl!
+        : "https://lh3.googleusercontent.com/aida-public/AB6AXuDfFYA9gqNQ3ZrtJFLoPyXzjfQnbrhbt9CAI7cQ52wfrK3RUBlAofj0jCistzWRsH0Z3Jxg8fzO34P43d9eaqtQA1zNcFf1-oPlSqLLcYJdhkfyAq6WQ62NfhaYRS-xSRJ5xahrdnLGRO2JMxzcOsCxT8PePvvEtMiJAfOln5L1zX_9fZDgvMGrv9own00LCO6MuclXsTA4lc8q4H1LT0AxnOY-C7b_SvCZgV7_UIMgCiOwjJO5c-ABdls-IvfSttloiZgkOJC4mGQ";
+
+    var activeNavClass = "flex items-center gap-3 px-4 py-3 text-[#003d9b] font-bold bg-[#ffffff] rounded-xl transition-all duration-300";
+    var passiveNavClass = "flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 rounded-xl hover:pl-6 transition-all duration-300";
+}
+<!DOCTYPE html>
+<html class="light" lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Bireysel Panel</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+                "primary-fixed": "#dae2ff",
+                "on-secondary-fixed": "#0d1c2e",
+                "surface-container-high": "#e6e8ea",
+                "on-error-container": "#93000a",
+                "tertiary-fixed": "#6ffbbe",
+                "tertiary": "#004e33",
+                "surface-tint": "#0c56d0",
+                "on-primary-fixed": "#001848",
+                "surface-dim": "#d8dadc",
+                "on-tertiary-fixed-variant": "#005236",
+                "on-primary-container": "#c4d2ff",
+                "inverse-primary": "#b2c5ff",
+                "tertiary-fixed-dim": "#4edea3",
+                "primary-container": "#0052cc",
+                "on-error": "#ffffff",
+                "on-background": "#191c1e",
+                "secondary-fixed-dim": "#b9c7df",
+                "surface-container": "#eceef0",
+                "outline-variant": "#c3c6d6",
+                "on-secondary-fixed-variant": "#3a485b",
+                "primary-fixed-dim": "#b2c5ff",
+                "inverse-on-surface": "#eff1f3",
+                "surface-container-lowest": "#ffffff",
+                "error": "#ba1a1a",
+                "background": "#f7f9fb",
+                "surface-container-highest": "#e0e3e5",
+                "surface": "#f7f9fb",
+                "secondary-fixed": "#d5e3fc",
+                "on-secondary": "#ffffff",
+                "on-surface": "#191c1e",
+                "on-tertiary-container": "#5debaf",
+                "outline": "#737685",
+                "on-primary": "#ffffff",
+                "secondary": "#515f74",
+                "on-surface-variant": "#434654",
+                "surface-container-low": "#f2f4f6",
+                "inverse-surface": "#2d3133",
+                "surface-bright": "#f7f9fb",
+                "primary": "#003d9b",
+                "on-tertiary": "#ffffff",
+                "error-container": "#ffdad6",
+                "surface-variant": "#e0e3e5",
+                "on-primary-fixed-variant": "#0040a2",
+                "tertiary-container": "#006846",
+                "on-secondary-container": "#57657a",
+                "on-tertiary-fixed": "#002113",
+                "secondary-container": "#d5e3fc"
+            },
+            borderRadius: {
+                DEFAULT: "0.125rem",
+                lg: "0.25rem",
+                xl: "0.75rem",
+                full: "0.75rem"
+            },
+            fontFamily: {
+                headline: ["Inter", "sans-serif"],
+                body: ["Inter", "sans-serif"],
+                label: ["Inter", "sans-serif"]
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-nav { backdrop-filter: blur(24px); }
+        .data-spotlight { border-left: 2px solid #003d9b; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body overflow-x-hidden">
+    <div class="flex min-h-screen">
+        <aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-[#f2f4f6] backdrop-blur-lg flex-col p-4 gap-2 z-50">
+            <div class="mb-8 px-2 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary">
+                    <span class="material-symbols-outlined">analytics</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black text-[#003d9b] tracking-tight">Kullanıcı Paneli</h1>
+                    <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Bireysel Ekran</p>
+                </div>
+            </div>
+
+            <nav class="flex-1 flex flex-col gap-1">
+                <a class="@(isDashboard ? activeNavClass : passiveNavClass)" href="/UserDashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">Panelim</span>
+                </a>
+                <a class="@(isMyListings ? activeNavClass : passiveNavClass)" href="/Listings/MyListings">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">İlanlarım</span>
+                </a>
+                <a class="@(isAllListings ? activeNavClass : passiveNavClass)" href="/Listings">
+                    <span class="material-symbols-outlined">view_list</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">Tüm İlanlar</span>
+                </a>
+                <a class="@(isCreateListing ? activeNavClass : passiveNavClass)" href="/Listings/Create">
+                    <span class="material-symbols-outlined">add_box</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">İlan Ver</span>
+                </a>
+                <a class="@(isIncoming ? activeNavClass : passiveNavClass)" href="/Requests/Incoming">
+                    <span class="material-symbols-outlined">move_to_inbox</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">Gelen Talepler</span>
+                </a>
+                <a class="@(isOutgoing ? activeNavClass : passiveNavClass)" href="/Requests/Outgoing">
+                    <span class="material-symbols-outlined">outbox</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">Giden Talepler</span>
+                </a>
+                <a class="@(isProfile ? activeNavClass : passiveNavClass)" href="/Profile">
+                    <span class="material-symbols-outlined">person</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">Profilim</span>
+                </a>
+            </nav>
+
+            <div class="mt-auto flex flex-col gap-1 border-t border-outline-variant/10 pt-4">
+                <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-primary transition-colors" href="/">
+                    <span class="material-symbols-outlined">home</span>
+                    <span class="text-[0.6875rem] uppercase tracking-wider">Siteye Dön</span>
+                </a>
+
+                <form action="/Account/Logout" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-error transition-colors text-left">
+                        <span class="material-symbols-outlined">logout</span>
+                        <span class="text-[0.6875rem] uppercase tracking-wider">Çıkış Yap</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="flex-1 md:ml-64 bg-surface min-h-screen min-w-0 w-full">
+            <header class="bg-[#f7f9fb]/80 backdrop-blur-xl sticky top-0 z-40 flex justify-between items-center px-8 py-3 w-full">
+                <div class="flex items-center gap-6">
+                    <span class="md:hidden material-symbols-outlined text-primary cursor-pointer">menu</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="hidden md:flex gap-6 mr-6">
+                        <a class="text-[#003d9b] border-b-2 border-[#003d9b] pb-1 text-sm font-medium" href="/UserDashboard">Panel</a>
+                        <a class="text-slate-500 hover:text-[#0052cc] transition-colors text-sm" href="/Requests/Outgoing">Talepler</a>
+                        <a class="text-slate-500 hover:text-[#0052cc] transition-colors text-sm" href="/Profile">Profil</a>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <a href="/Requests/Incoming" class="p-2 text-slate-500 hover:bg-surface-container rounded-full transition-colors">
+                            <span class="material-symbols-outlined">notifications</span>
+                        </a>
+                    </div>
+
+                    <div class="h-8 w-[1px] bg-outline-variant/30 mx-2"></div>
+                    <a href="/Listings/Create" class="bg-primary hover:bg-primary-container text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 shadow-sm">
+                        Yeni İlan
+                    </a>
+                    <div class="ml-2 flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-bold text-on-surface">@displayName</p>
+                            <p class="text-[10px] text-slate-500">Bireysel Kullanıcı</p>
+                        </div>
+                        <img alt="Kullanıcı Avatar" class="h-9 w-9 rounded-full object-cover ring-2 ring-primary-container/20" src="@profileImageUrl" />
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-4 md:p-8 w-full pb-28 md:pb-8">
+                @if (TempData["SuccessMessage"] is string successMessage)
+                {
+                    <div class="mb-6 rounded-xl bg-tertiary-container/20 text-tertiary px-4 py-3">@successMessage</div>
+                }
+                @if (TempData["ErrorMessage"] is string errorMessage)
+                {
+                    <div class="mb-6 rounded-xl bg-error-container text-on-error-container px-4 py-3">@errorMessage</div>
+                }
+
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest glass-nav border-t border-outline-variant/10 px-6 py-3 flex justify-between items-center z-50">
+        <a class="flex flex-col items-center gap-1 @(isDashboard ? "text-primary" : "text-slate-400")" href="/UserDashboard">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+            <span class="text-[10px] font-bold">Panel</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 @(isMyListings ? "text-primary" : "text-slate-400")" href="/Listings/MyListings">
+            <span class="material-symbols-outlined">receipt_long</span>
+            <span class="text-[10px] font-bold">İlanlar</span>
+        </a>
+        <div class="relative -top-6">
+            <a href="/Listings/Create" class="bg-primary h-14 w-14 rounded-full shadow-lg shadow-primary/30 flex items-center justify-center text-white">
+                <span class="material-symbols-outlined text-3xl">add</span>
+            </a>
+        </div>
+        <a class="flex flex-col items-center gap-1 @(isIncoming ? "text-primary" : "text-slate-400")" href="/Requests/Incoming">
+            <span class="material-symbols-outlined">move_to_inbox</span>
+            <span class="text-[10px] font-bold">Talepler</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 @(isProfile ? "text-primary" : "text-slate-400")" href="/Profile">
+            <span class="material-symbols-outlined">person</span>
+            <span class="text-[10px] font-bold">Profil</span>
+        </a>
+    </nav>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

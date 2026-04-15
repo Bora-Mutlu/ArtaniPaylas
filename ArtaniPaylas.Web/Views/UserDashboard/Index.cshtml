@@ -1,0 +1,178 @@
+@model UserDashboardViewModel
+@{
+    ViewData["Title"] = "Panelim";
+    Layout = "_UserLayout";
+}
+
+<div class="mb-10">
+    <h2 class="text-4xl font-extrabold text-[#003d9b] tracking-tight mb-2">Hoş geldiniz, @Model.DisplayName</h2>
+    <p class="text-secondary font-medium text-lg">Tüm taleplerinizi ve ilanlarınızı buradan merkezi olarak yönetebilirsiniz.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+    <div class="md:col-span-1 p-6 bg-surface-container-lowest rounded-xl data-spotlight transition-all hover:bg-surface-bright group">
+        <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">AKTİF İLANLAR</p>
+        <div class="flex items-baseline gap-2">
+            <span class="text-4xl font-black text-[#003d9b]">@Model.ActiveListingsCount</span>
+            <span class="text-xs font-bold text-tertiary-container bg-tertiary-fixed px-2 py-0.5 rounded-full">+@Model.NewListingsLast7Days yeni</span>
+        </div>
+    </div>
+
+    <div class="md:col-span-1 p-6 bg-surface-container-lowest rounded-xl data-spotlight transition-all hover:bg-surface-bright">
+        <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">GELEN TALEPLER</p>
+        <div class="flex items-baseline gap-2">
+            <span class="text-4xl font-black text-[#003d9b]">@Model.IncomingRequestsCount</span>
+            <span class="text-xs font-bold text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">@Model.PendingIncomingRequestsCount Bekleyen</span>
+        </div>
+    </div>
+
+    <div class="md:col-span-2 p-6 bg-primary-container rounded-xl text-on-primary-container flex flex-col justify-between relative overflow-hidden group">
+        <div class="relative z-10">
+            <p class="text-[10px] uppercase font-bold tracking-widest text-white/70 mb-1">GİDEN TEKLİF BAŞARISI</p>
+            <span class="text-4xl font-black text-white">%@Model.OutgoingSuccessRate.ToString("0.0")</span>
+        </div>
+        <div class="absolute right-[-10%] top-[-10%] opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <span class="material-symbols-outlined text-[140px]" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div class="lg:col-span-2 flex flex-col gap-6">
+        <div class="flex items-center justify-between px-2">
+            <h3 class="text-xl font-bold text-[#003d9b]">Son İlanlarım</h3>
+            <div class="flex items-center gap-4">
+                <a class="text-sm font-semibold text-primary hover:underline" href="/Listings/MyListings?activeOnly=true">Aktif İlanlarım</a>
+                <a class="text-sm font-semibold text-primary hover:underline" href="/Listings/MyListings">Tümünü Gör</a>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            @if (!Model.RecentListings.Any())
+            {
+                <div class="bg-surface-container-lowest p-6 rounded-xl text-sm text-slate-500">Henüz ilanınız bulunmuyor. İlk ilanınızı oluşturabilirsiniz.</div>
+            }
+            else
+            {
+                @foreach (var item in Model.RecentListings)
+                {
+                    var statusClass = item.StatusText.Contains("Aktif", StringComparison.OrdinalIgnoreCase)
+                        ? "bg-tertiary-container text-on-tertiary-container"
+                        : item.StatusText.Contains("Tamam", StringComparison.OrdinalIgnoreCase)
+                            ? "bg-surface-container-highest text-on-surface-variant"
+                            : "bg-error-container text-on-error-container";
+
+                    <div class="bg-surface-container-lowest p-4 rounded-xl flex items-center gap-5 group hover:bg-surface-container transition-colors">
+                        <div class="h-20 w-20 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-high">
+                            @if (!string.IsNullOrWhiteSpace(item.PhotoPath))
+                            {
+                                <img alt="@item.Title" class="h-full w-full object-cover" src="@item.PhotoPath" />
+                            }
+                            else
+                            {
+                                <div class="h-full w-full flex items-center justify-center text-slate-400 text-xs">Fotoğraf Yok</div>
+                            }
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1 gap-3">
+                                <h4 class="font-bold text-on-surface text-lg truncate">@item.Title</h4>
+                                <span class="text-xs font-bold px-3 py-1 rounded-full @statusClass">@item.StatusText</span>
+                            </div>
+                            <div class="flex gap-4 text-xs font-medium text-slate-500">
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> @item.RequestCount Talep</span>
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> @item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-end gap-2">
+                            <a href="/Listings/Details/@item.Id" class="p-2 bg-surface-container-high rounded-lg group-hover:bg-primary-container group-hover:text-white transition-all">
+                                <span class="material-symbols-outlined">visibility</span>
+                            </a>
+                            @if (item.IsEditable)
+                            {
+                                <a href="/Listings/Edit/@item.Id" class="p-2 bg-surface-container-high rounded-lg group-hover:bg-primary-container group-hover:text-white transition-all">
+                                    <span class="material-symbols-outlined">edit</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="lg:col-span-1 flex flex-col gap-8">
+        <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+            <h3 class="text-sm font-extrabold uppercase tracking-widest text-[#003d9b] mb-6">Hızlı İşlemler</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="/Listings/Create" class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl hover:bg-primary group transition-all no-underline">
+                    <span class="material-symbols-outlined text-primary group-hover:text-white mb-2">add_circle</span>
+                    <span class="text-[11px] font-bold group-hover:text-white uppercase">İlan Ver</span>
+                </a>
+                <a href="/Listings/MyListings" class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl hover:bg-primary group transition-all no-underline">
+                    <span class="material-symbols-outlined text-primary group-hover:text-white mb-2">analytics</span>
+                    <span class="text-[11px] font-bold group-hover:text-white uppercase">İlanlarım</span>
+                </a>
+                <a href="/Listings/MyListings?activeOnly=true" class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl hover:bg-primary group transition-all no-underline">
+                    <span class="material-symbols-outlined text-primary group-hover:text-white mb-2">check_circle</span>
+                    <span class="text-[11px] font-bold group-hover:text-white uppercase">Aktif İlanlar</span>
+                </a>
+                <a href="/Requests/Incoming" class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl hover:bg-primary group transition-all no-underline">
+                    <span class="material-symbols-outlined text-primary group-hover:text-white mb-2">mail</span>
+                    <span class="text-[11px] font-bold group-hover:text-white uppercase">Talepler</span>
+                </a>
+                <a href="/Profile" class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl hover:bg-primary group transition-all no-underline">
+                    <span class="material-symbols-outlined text-primary group-hover:text-white mb-2">person</span>
+                    <span class="text-[11px] font-bold group-hover:text-white uppercase">Profil</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-surface-container-lowest p-6 rounded-xl border-t-4 border-primary">
+            <h3 class="text-lg font-bold text-on-surface mb-6 flex items-center justify-between">
+                Bekleyen Talepler
+                <span class="h-6 w-6 bg-error-container text-on-error-container text-[10px] flex items-center justify-center rounded-full">@Model.PendingIncomingRequestsCount</span>
+            </h3>
+            <div class="flex flex-col gap-4">
+                @if (!Model.PendingIncomingRequests.Any())
+                {
+                    <div class="text-sm text-slate-500">Bekleyen talep bulunmuyor.</div>
+                }
+                else
+                {
+                    @foreach (var request in Model.PendingIncomingRequests)
+                    {
+                        var ago = DateTime.Now - request.CreatedAt.ToLocalTime();
+                        var agoText = ago.TotalHours < 1
+                            ? $"{Math.Max(1, (int)ago.TotalMinutes)} dk önce"
+                            : ago.TotalDays < 1
+                                ? $"{(int)ago.TotalHours} saat önce"
+                                : $"{(int)ago.TotalDays} gün önce";
+
+                        <a href="/Requests/Incoming" class="flex gap-4 p-3 rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer no-underline">
+                            <div class="h-10 w-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary-container font-black text-xs flex-shrink-0">@request.RequesterInitials</div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-on-surface truncate">@request.RequesterName</p>
+                                <p class="text-[11px] text-slate-500 truncate">@request.ListingTitle için talep gönderdi.</p>
+                                <p class="text-[10px] text-primary mt-1 font-bold">@agoText</p>
+                            </div>
+                        </a>
+                    }
+                }
+            </div>
+            <a href="/Requests/Incoming" class="w-full mt-6 py-3 border border-outline-variant/30 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-500 hover:bg-surface-container-low transition-all inline-flex justify-center no-underline">
+                Tüm Talepleri Yönet
+            </a>
+        </div>
+
+        <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+            <h3 class="text-sm font-extrabold uppercase tracking-widest text-[#003d9b] mb-4">Şikayet Et / Raporla</h3>
+            <form asp-action="SubmitReport" method="post" class="space-y-3">
+                @Html.AntiForgeryToken()
+                <textarea name="reason" rows="4" maxlength="500" class="w-full bg-surface-container-high rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm resize-none" placeholder="Mesajınızı yazın..." required></textarea>
+                <button type="submit" class="w-full bg-error text-on-error py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">Rapor Gönder</button>
+            </form>
+        </div>
+    </div>
+</div>

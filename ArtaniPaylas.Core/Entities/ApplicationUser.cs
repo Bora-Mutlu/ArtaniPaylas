@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
 namespace ArtaniPaylas.Core.Entities;
@@ -18,6 +18,8 @@ public class ApplicationUser : IdentityUser
     public string? ProfileImageUrl { get; set; }
 
     public double TrustScore { get; set; }
+
+    public bool IsActive { get; set; } = true;
 
     public ICollection<Listing> Listings { get; set; } = new List<Listing>();
 

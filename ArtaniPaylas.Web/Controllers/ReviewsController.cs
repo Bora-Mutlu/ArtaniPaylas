@@ -42,7 +42,7 @@ public class ReviewsController : Controller
 
         if (request.Status != RequestStatus.Delivered)
         {
-            TempData["ErrorMessage"] = "Sadece teslim edilen talepler de�erlendirilebilir.";
+            TempData["ErrorMessage"] = "Sadece teslim edilen talepler değerlendirilebilir.";
             return RedirectToAction("Index", "Profile");
         }
 
@@ -55,14 +55,14 @@ public class ReviewsController : Controller
         var alreadyReviewed = await _context.Reviews.AnyAsync(x => x.RequestId == requestId && x.FromUserId == userId);
         if (alreadyReviewed)
         {
-            TempData["ErrorMessage"] = "Bu teslim i�in zaten de�erlendirme yapt�n.";
+            TempData["ErrorMessage"] = "Bu teslim için zaten değerlendirme yaptın.";
             return RedirectToAction("Index", "Profile");
         }
 
         var model = new ReviewCreateViewModel
         {
             RequestId = requestId,
-            TargetUserDisplayName = targetUser.FullName ?? targetUser.UserName ?? "Kullan�c�"
+            TargetUserDisplayName = targetUser.FullName ?? targetUser.UserName ?? "Kullanıcı"
         };
 
         return View(model);
@@ -96,7 +96,7 @@ public class ReviewsController : Controller
 
         if (request.Status != RequestStatus.Delivered)
         {
-            TempData["ErrorMessage"] = "Bu talep teslim edilmedi�i i�in de�erlendirme yap�lamaz.";
+            TempData["ErrorMessage"] = "Bu talep teslim edilmediği için değerlendirme yapılamaz.";
             return RedirectToAction("Index", "Profile");
         }
 
@@ -109,7 +109,7 @@ public class ReviewsController : Controller
         var alreadyReviewed = await _context.Reviews.AnyAsync(x => x.RequestId == model.RequestId && x.FromUserId == userId);
         if (alreadyReviewed)
         {
-            TempData["ErrorMessage"] = "Bu teslim i�in zaten de�erlendirme yapt�n.";
+            TempData["ErrorMessage"] = "Bu teslim için zaten değerlendirme yaptın.";
             return RedirectToAction("Index", "Profile");
         }
 

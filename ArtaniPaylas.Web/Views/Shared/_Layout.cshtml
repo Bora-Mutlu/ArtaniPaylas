@@ -1,43 +1,220 @@
-﻿@{
+@{
     var isAuthenticated = User?.Identity?.IsAuthenticated == true;
-    var isAuthArea = Context.Request.Path.StartsWithSegments("/Identity/Account", StringComparison.OrdinalIgnoreCase);
+    var path = Context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
 }
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Artanı Paylaş</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+    <title>@ViewData["Title"] - Artani Paylas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ArtaniPaylas.Web.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --ap2-primary: #006948;
+            --ap2-primary-2: #00855d;
+            --ap2-ink: #153729;
+            --ap2-muted: #4b6358;
+            --ap2-border: #cfe6d8;
+            --ap2-surface: #ffffff;
+            --ap2-soft: #f2fbf6;
+        }
+
+        body.ap-layout-body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(660px 260px at 90% 0%, rgba(104, 219, 169, 0.26), transparent 72%),
+                radial-gradient(520px 220px at 10% 0%, rgba(111, 251, 190, 0.22), transparent 74%),
+                linear-gradient(180deg, #f7fdf9 0%, #eef9f3 100%);
+            color: var(--ap2-ink);
+        }
+
+        .ap2-topbar {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.86);
+            border-bottom: 1px solid var(--ap2-border);
+        }
+
+        .ap2-brand {
+            font-weight: 800;
+            color: var(--ap2-ink);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .ap2-brand-dot {
+            width: 0.86rem;
+            height: 0.86rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--ap2-primary), var(--ap2-primary-2));
+            box-shadow: 0 0 0 4px #e8f9ef;
+        }
+
+        .ap2-menu {
+            gap: 0.2rem;
+        }
+
+        .ap2-menu-link {
+            color: #284539;
+            font-weight: 600;
+            padding: 0.5rem 0.9rem;
+            border-radius: 999px;
+            text-decoration: none;
+        }
+
+        .ap2-menu-link:hover,
+        .ap2-menu-link:focus {
+            color: var(--ap2-primary);
+            background: #eaf8f0;
+        }
+
+        .ap2-menu-link.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--ap2-primary), var(--ap2-primary-2));
+            box-shadow: 0 10px 24px rgba(0, 108, 74, 0.24);
+        }
+
+        .ap-auth-area {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .ap-auth-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ap-auth-link {
+            border: 0;
+            background: transparent;
+            color: #355447;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 0.45rem 0.6rem;
+            border-radius: 0.65rem;
+        }
+
+        .ap-auth-link:hover {
+            color: var(--ap2-primary);
+            background: #eaf8f0;
+        }
+
+        .ap-auth-pill {
+            color: #ffffff;
+            border: 0;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 0.46rem 0.95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ap-auth-primary {
+            background: linear-gradient(135deg, var(--ap2-primary), var(--ap2-primary-2));
+            box-shadow: 0 10px 20px rgba(0, 108, 74, 0.24);
+        }
+
+        .ap-auth-primary:hover {
+            color: #ffffff;
+            background: linear-gradient(135deg, #005236, #006948);
+        }
+
+        .ap-auth-admin {
+            background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+        }
+
+        .ap-auth-admin:hover {
+            color: #ffffff;
+            background: linear-gradient(135deg, #6b1616, #991b1b);
+        }
+
+        .ap2-shell {
+            width: min(1260px, 100%);
+        }
+
+        .ap2-flash {
+            border-radius: 0.9rem;
+            border: 1px solid transparent;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .ap2-footer {
+            margin-top: auto;
+            background: linear-gradient(180deg, #f5fcf8 0%, #ebf8f1 100%);
+            border-top: 1px solid var(--ap2-border);
+        }
+
+        .ap2-footer-title {
+            font-weight: 800;
+            color: #143a2b;
+            margin-bottom: 0.6rem;
+        }
+
+        .ap2-footer-text {
+            color: #4d655a;
+            margin: 0;
+        }
+
+        .ap2-footer-links a {
+            color: #2f4d3f;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .ap2-footer-links a:hover {
+            color: var(--ap2-primary);
+            text-decoration: underline;
+        }
+    </style>
 </head>
-<body class="ap-body d-flex flex-column min-vh-100" data-authenticated="@(isAuthenticated ? "true" : "false")">
+<body class="ap-layout-body d-flex flex-column min-vh-100" data-authenticated="@(isAuthenticated ? "true" : "false")">
     <header class="sticky-top">
-        <nav class="navbar navbar-expand-lg ap-navbar border-bottom">
-            <div class="container-xxl">
-                <a class="navbar-brand ap-brand" asp-controller="Home" asp-action="Index">
-                    <span class="ap-brand-dot"></span>
-                    <span>Artanı Paylaş</span>
+        <nav class="navbar navbar-expand-lg ap2-topbar">
+            <div class="container-xxl ap2-shell">
+                <a class="ap2-brand" asp-controller="Home" asp-action="Index">
+                    <span class="ap2-brand-dot"></span>
+                    <span>Artani Paylas</span>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Gezinmeyi aç/kapat">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNav">
-                    @if (isAuthenticated)
-                    {
-                        <ul class="navbar-nav ap-nav-links mx-lg-auto mb-2 mb-lg-0 ap-nav-center">
-                            <li class="nav-item"><a class="nav-link" asp-controller="Listings" asp-action="Index">İlanlar</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Listings" asp-action="Create">İlan Ekle</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Listings" asp-action="MyListings">İlanlarım</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Requests" asp-action="Incoming">Gelen Talepler</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Requests" asp-action="Outgoing">Giden Talepler</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Profile" asp-action="History">Geçmiş</a></li>
-                        </ul>
-                    }
+                    <ul class="navbar-nav ap2-menu mx-lg-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="ap2-menu-link @(path == "/" || path.StartsWith("/home") ? "active" : string.Empty)" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="ap2-menu-link @(path.StartsWith("/listings") ? "active" : string.Empty)" asp-controller="Listings" asp-action="Index">Ilanlar</a>
+                        </li>
+                        @if (isAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="ap2-menu-link @(path.StartsWith("/requests/incoming") ? "active" : string.Empty)" asp-controller="Requests" asp-action="Incoming">Gelen Talepler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="ap2-menu-link @(path.StartsWith("/requests/outgoing") ? "active" : string.Empty)" asp-controller="Requests" asp-action="Outgoing">Giden Talepler</a>
+                            </li>
+                        }
+                    </ul>
 
                     <div class="ap-auth-area ms-lg-3">
                         <partial name="_LoginPartial" />
@@ -47,63 +224,59 @@
         </nav>
     </header>
 
-    <div class="container-xxl py-4 pb-5 d-flex flex-column flex-grow-1">
+    <div class="container-xxl ap2-shell py-4 pb-5 d-flex flex-column flex-grow-1">
         @if (TempData["SuccessMessage"] is string successMessage)
         {
-            <div class="alert alert-success ap-alert" role="alert">
-                <strong>Başarılı:</strong> @successMessage
+            <div class="alert alert-success ap2-flash" role="alert">
+                <strong>Basarili:</strong> @successMessage
             </div>
         }
         @if (TempData["ErrorMessage"] is string errorMessage)
         {
-            <div class="alert alert-danger ap-alert" role="alert">
-                <strong>Uyarı:</strong> @errorMessage
+            <div class="alert alert-danger ap2-flash" role="alert">
+                <strong>Uyari:</strong> @errorMessage
             </div>
         }
 
-        <main role="main" class="ap-main-content flex-grow-1">
+        <main role="main" class="flex-grow-1">
             @RenderBody()
         </main>
-
-        <div id="ap-live-toast" class="ap-live-toast" role="status" aria-live="polite"></div>
     </div>
 
-    <footer class="ap-footer border-top mt-auto">
-        <div class="container-xxl py-5">
+    <footer class="ap2-footer">
+        <div class="container-xxl ap2-shell py-5">
             <div class="row g-4">
                 <div class="col-lg-4">
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <span class="ap-brand-dot"></span>
-                        <strong class="h5 mb-0">Artanı Paylaş</strong>
+                        <span class="ap2-brand-dot"></span>
+                        <strong class="h5 mb-0">Artani Paylas</strong>
                     </div>
-                    <p class="mb-2 text-muted">
-                        Fazla gıdayı ihtiyaç sahiplerine güvenli ve saygın bir şekilde ulaştırmak için dijital dayanışma ağı.
-                    </p>
+                    <p class="ap2-footer-text">Fazla giysiyi ihtiyac sahiplerine guvenli ve saygin sekilde ulastirmak icin dijital dayanisma agi.</p>
                 </div>
 
                 <div class="col-lg-4">
-                    <h3 class="h6 text-uppercase text-muted mb-3">Hızlı Erişim</h3>
-                    <div class="d-flex flex-column gap-2 ap-footer-links">
+                    <h3 class="h6 text-uppercase text-muted mb-3">Hizli Erisim</h3>
+                    <div class="d-flex flex-column gap-2 ap2-footer-links">
                         <a asp-controller="Home" asp-action="Index">Ana Sayfa</a>
-                        <a asp-controller="Listings" asp-action="Index">İlanları İncele</a>
-                        <a asp-controller="Listings" asp-action="Create">İlan Oluştur</a>
-                        <a asp-controller="Profile" asp-action="History">Geçmiş İşlemler</a>
+                        <a asp-controller="Listings" asp-action="Index">Ilanlar</a>
+                        <a asp-controller="Listings" asp-action="Create">Ilan Olustur</a>
+                        <a asp-controller="Profile" asp-action="History">Gecmis Islemler</a>
                     </div>
                 </div>
 
                 <div class="col-lg-4">
-                    <h3 class="h6 text-uppercase text-muted mb-3">Durum ve Hedef</h3>
-                    <ul class="list-unstyled small text-muted mb-3">
-                        <li>Misyon: Gıda israfını azaltmak</li>
-                        <li>Vizyon: Güvenli ve ölçeklenebilir dayanışma</li>
-                        <li>Öncelik: Hızlı eşleşme, şeffaf süreç</li>
+                    <h3 class="h6 text-uppercase text-muted mb-3">Odak Noktamiz</h3>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li>Giysi israfini azaltmak</li>
+                        <li>Seffaf ve guvenli surecler</li>
+                        <li>Hizli eslesme deneyimi</li>
                     </ul>
                 </div>
             </div>
 
-            <div class="ap-footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mt-4 pt-3 border-top">
-                <span>&copy; 2026 Artanı Paylaş</span>
-                <span class="text-muted">Toplumsal fayda için geliştirilmektedir.</span>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mt-4 pt-3 border-top">
+                <span>&copy; 2026 Artani Paylas</span>
+                <span class="text-muted">Toplumsal fayda icin gelistirilmektedir.</span>
             </div>
         </div>
     </footer>
@@ -114,3 +287,4 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+

@@ -12,6 +12,19 @@ public static class StatusLocalizationExtensions
             ListingStatus.Completed => "Tamamlandı",
             ListingStatus.Expired => "Süresi Geçti",
             ListingStatus.Canceled => "İptal Edildi",
+            ListingStatus.Suspended => "Askıya Alındı",
+            _ => status.ToString()
+        };
+    }
+
+    public static string ToDisplayText(this ReportStatus status)
+    {
+        return status switch
+        {
+            ReportStatus.Pending => "Bekliyor",
+            ReportStatus.Reviewed => "İncelendi",
+            ReportStatus.Resolved => "Çözüldü",
+            ReportStatus.Dismissed => "Reddedildi",
             _ => status.ToString()
         };
     }

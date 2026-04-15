@@ -1,6 +1,7 @@
-﻿@model ProfileIndexViewModel
+@model ProfileIndexViewModel
 @{
     ViewData["Title"] = "Profil";
+    Layout = "_UserLayout";
 
     var displayName = Model.User.FullName ?? Model.User.UserName ?? "Kullanıcı";
     var profileImageUrl = string.IsNullOrWhiteSpace(Model.User.ProfileImageUrl) ? null : Model.User.ProfileImageUrl;
@@ -225,3 +226,4 @@
         }
     </div>
 </div>
+

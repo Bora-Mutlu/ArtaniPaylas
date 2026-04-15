@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Artani Paylas - 8 Haftalik Gelisim Raporu</title>
+  <style>
+    :root {
+      --bg: #f2f7f3;
+      --card: #ffffff;
+      --ink: #15231b;
+      --muted: #5b6f62;
+      --line: #d4e2d8;
+      --emerald: #0f6a43;
+      --emerald-dark: #0b4f32;
+      --emerald-soft: #d9efe4;
+      --warning: #d26a2a;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      line-height: 1.6;
+      background:
+        radial-gradient(circle at 12% 2%, #e4f2ea 0, #e4f2ea 18%, transparent 55%),
+        radial-gradient(circle at 92% 0%, #eef8f1 0, #eef8f1 22%, transparent 58%),
+        var(--bg);
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 18px 56px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--emerald-dark), var(--emerald));
+      color: #f2fff8;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      margin: 0;
+      color: #d9efe4;
+      max-width: 900px;
+    }
+
+    .meta {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      grid-column: span 12;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      color: #114f34;
+      font-size: 1.2rem;
+    }
+
+    .card h3 {
+      margin: 18px 0 8px;
+      color: #1a5d3f;
+      font-size: 1rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: #fbfdfb;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .stat b {
+      display: block;
+      color: #0e4f33;
+      font-size: 1.4rem;
+      margin-bottom: 2px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      text-align: left;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #edf6f0;
+      color: #164f36;
+    }
+
+    .note {
+      border-left: 4px solid var(--warning);
+      background: #fff7f1;
+      color: #6c3d1d;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero h1 {
+        font-size: 1.5rem;
+      }
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>Artani Paylas - 8. Hafta Gelisim Raporu</h1>
+      <p>
+        Bu hafta odak noktasi, panel deneyimini ikiye ayirmak (admin ve kullanici), tasarim dilini zümrüt temada ortaklastirmak,
+        rapor/şikayet sureclerini moderasyon odakli hale getirmek ve ekranlar arasi davranis tutarliligini arttirmak olmustur.
+      </p>
+      <div class="meta">
+        <span class="tag">Rapor Tarihi: 15 Nisan 2026</span>
+        <span class="tag">Sprint: Hafta 8</span>
+        <span class="tag">Teknoloji: ASP.NET Core MVC (.NET 8)</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>1) Haftanin Genel Ozeti</h2>
+        <p>
+          Uygulama icinde daha once tek kanal gibi akan ekranlar, bu hafta itibariyla rol ve baglam bazli ayrildi.
+          Kayitli kullanicilar dashboard akisi icinde kalirken, ziyaretciler public akisla devam ediyor.
+          Admin tarafinda ise ilan raporlarina kullanici deneyiminden bagimsiz bir inceleme katmani eklendi.
+        </p>
+        <div class="stats">
+          <div class="stat"><b>3</b><span class="muted">Ana tasarim ekseni: Public, User Dashboard, Admin Dashboard</span></div>
+          <div class="stat"><b>10+</b><span class="muted">Yeniden ele alinan ekran</span></div>
+          <div class="stat"><b>2</b><span class="muted">Yeni layout duzeni (_UserLayout, _AdminLayout)</span></div>
+          <div class="stat"><b>1</b><span class="muted">Admin rapor inceleme ozel sayfasi</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>2) HTML ve Razor Katmaninda Yapilanlar</h2>
+        <h3>2.1 Yapisal Duzenleme</h3>
+        <ul>
+          <li>Sayfalarin bir kismi role ve kimlik durumuna gore farkli layout sececek sekilde ayrildi.</li>
+          <li>Ortak kart, durum etiketi, buton ve tablo hiyerarsisi dashboard yaklasimina gore standardize edildi.</li>
+          <li>Ilan listeleme ve detay sayfalarinda guest/auth ayirimi gorunum seviyesinde netlestirildi.</li>
+        </ul>
+
+        <h3>2.2 Kullanim Davranisi ve Etkilesim</h3>
+        <ul>
+          <li>Talep satiri ac-kapa davranisinda table/collapse kaynakli titreme problemi kaldirildi; ozel JS toggling uygulandi.</li>
+          <li>Acilan satir iceriginin kaybolmasina neden olan durumlar d-none tabanli kontrolle giderildi.</li>
+          <li>Metin alanlarinda istenmeyen resize davranisi sikayet formlarinda kapatildi.</li>
+        </ul>
+
+        <h3>2.3 Form ve Islem Guvenligi</h3>
+        <ul>
+          <li>Ilan raporlamada ayni kullanicinin ayni ilana tekrarlayan sikayet gondermesi backend tarafinda engellendi.</li>
+          <li>Rapor durum degisimlerinde beklenen mevcut durum (expected state) kontrolu eklenerek yarismali durumlar azaltildi.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>3) Admin Dashboard Tasarim ve Akis Degisiklikleri</h2>
+        <h3>3.1 Admin Icin Ayrik Inceleme Deneyimi</h3>
+        <ul>
+          <li>Raporlar ekranindaki ilan baglantisi artik kullaniciya acik detay yerine admine ozel inceleme sayfasina yonlendiriyor.</li>
+          <li>Yeni admin inceleme sayfasinda tek ekranda su 3 katman birlikte sunuluyor: ilan ozeti, rapor ozeti, karar butonlari.</li>
+        </ul>
+
+        <h3>3.2 Karar Mekanizmasi (Moderasyon + Rapor Durumu)</h3>
+        <ul>
+          <li>Ilan icin: Askıya Al, Aktife Al, Iptal Et aksiyonlari ayni panelde toplandi.</li>
+          <li>Rapor icin: Incelendi, Cozuldu, Reddet, Beklemeye Al aksiyonlari statuye gore kosullu gosterilecek sekilde netlestirildi.</li>
+          <li>Cozulmus kaydin sonradan reddedilebilmesi icin Cozumu Reddet akisi eklendi.</li>
+        </ul>
+
+        <h3>3.3 Yonetsel Kullanilabilirlik</h3>
+        <ul>
+          <li>Islem sonrasi geri donusler returnUrl ile ayni inceleme baglaminda kalacak sekilde duzenlendi.</li>
+          <li>Durumlar arasi gecis kurallari backendde dogrulaniyor; gecersiz gecisler anlamli mesajla engelleniyor.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>4) Kullanici Dashboard Tasarim Degisiklikleri</h2>
+        <h3>4.1 Ekranlar Arasi Tema Butunlugu</h3>
+        <ul>
+          <li>Listings, MyListings, Requests, Review ve profile bagli ekranlar dashboard temasi ile uyumlu hale getirildi.</li>
+          <li>Zümrüt renk dili, durum rozetleri ve buton hiyerarsisi tum dashboard akisinda birlestirildi.</li>
+          <li>Detaya Git benzeri gecislerde kullanicinin public stile dusmesi engellenerek dashboard baglami korundu.</li>
+        </ul>
+
+        <h3>4.2 Kullanici Akisinda Fonksiyonel Iyilestirmeler</h3>
+        <ul>
+          <li>Tum ilanlari gor butonu dashboarddan ana listing akisina kontrollu gecis saglayacak sekilde yerlestirildi.</li>
+          <li>Kullaniciya ait gelen ve giden talep ekranlari, okunabilir kart/tablo yapisi ile tekrar duzenlendi.</li>
+          <li>Teslim sonrasi degerlendirme ekrani dashboard tasarimina gore yeniden ele alindi.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>5) Durum Gecis Kurallari ve Is Mantigi</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Mevcut Rapor Durumu</th>
+              <th>Izinli Gecisler</th>
+              <th>UI Buton Davranisi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pending</td>
+              <td>Reviewed, Resolved, Dismissed</td>
+              <td>Incelendi / Cozuldu / Reddet</td>
+            </tr>
+            <tr>
+              <td>Reviewed</td>
+              <td>Pending, Resolved, Dismissed</td>
+              <td>Cozuldu / Reddet / Beklemeye Al</td>
+            </tr>
+            <tr>
+              <td>Resolved</td>
+              <td>Pending, Dismissed</td>
+              <td>Cozumu Reddet / Beklemeye Al</td>
+            </tr>
+            <tr>
+              <td>Dismissed</td>
+              <td>Pending, Reviewed</td>
+              <td>Incelemeye Al / Beklemeye Al</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="note">
+          Not: Bu kurallar yalnizca gorunumde degil, backend tarafinda da zorunlu gecis kontrolu ile uygulanmistir.
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>6) Haftanin Sonunda Elde Edilen Cikti</h2>
+        <ul>
+          <li>Admin moderasyon sureci artik kullanici arayuzunden tamamen ayrik bir yonetsel akis sunuyor.</li>
+          <li>Kullanici dashboard deneyimi daha tutarli, daha modern ve akislar arasi gecislerde daha stabil.</li>
+          <li>Raporlama surecinde hem suistimal hem de yanlis durum gecisi riskleri azaltildi.</li>
+          <li>Arayuzdeki bircok kritik etkileşim sorunu (ac-kapa, icerik kaybi, resize vb.) dogrulanarak giderildi.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>7) Sonraki Hafta Icın Onerilen Odaklar</h2>
+        <ul>
+          <li>Admin rapor inceleme ekranina islem gecmisi (audit trail) eklenmesi.</li>
+          <li>Rapor bazli filtreleme, arama ve toplu moderasyon islevlerinin gelistirilmesi.</li>
+          <li>Kullanici dashboardu icin bildirim kutusu ve durum degisiklik timelinei.</li>
+          <li>Dashboard ekranlari icin e2e test senaryolarinin arttirilmasi.</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

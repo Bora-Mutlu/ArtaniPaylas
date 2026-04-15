@@ -1,6 +1,7 @@
 ﻿@model ReviewCreateViewModel
 @{
     ViewData["Title"] = "Değerlendirme";
+    Layout = "_UserLayout";
 }
 
 <section class="ap-page-head">
@@ -8,28 +9,58 @@
         <h1 class="ap-title">Teslim Sonrası Değerlendirme</h1>
         <p class="ap-subtitle">Değerlendirilen kullanıcı: <strong>@Model.TargetUserDisplayName</strong></p>
     </div>
+    <a asp-controller="Requests" asp-action="Outgoing" class="btn ap-btn-outline">Giden Taleplere Dön</a>
 </section>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Hedef Kullanıcı</small>
+            <div class="h5 mb-0 mt-2">@Model.TargetUserDisplayName</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Değerlendirme Tipi</small>
+            <div class="h5 mb-0 mt-2">Teslim Sonrası Güven Puanı</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Puan Skalası</small>
+            <div class="h5 mb-0 mt-2">1 düşük, 5 çok iyi</div>
+        </div>
+    </div>
+</div>
 
 <form asp-action="Create" method="post" class="space-y-4">
     <input type="hidden" asp-for="RequestId" />
+    <input type="hidden" asp-for="TargetUserDisplayName" />
 
     <div class="ap-card p-4">
-        <div class="mb-3">
-            <label asp-for="Rating" class="form-label fw-semibold">Puan (1-5)</label>
-            <input asp-for="Rating" class="form-control" type="number" min="1" max="5" />
-            <span asp-validation-for="Rating" class="text-danger"></span>
+        <div asp-validation-summary="ModelOnly" class="ap-auth-alert mb-3"></div>
+
+        <label asp-for="Rating" class="form-label fw-semibold d-block mb-2">Puan</label>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            @for (var i = 1; i <= 5; i++)
+            {
+                <input class="btn-check" type="radio" name="Rating" id="rating-@i" value="@i" @(Model.Rating == i ? "checked" : string.Empty) />
+                <label class="btn ap-btn-outline" for="rating-@i">@i Yıldız</label>
+            }
         </div>
+        <span asp-validation-for="Rating" class="text-danger d-block mb-3"></span>
 
         <div>
             <label asp-for="Comment" class="form-label fw-semibold">Yorum</label>
-            <textarea asp-for="Comment" class="form-control" rows="4" placeholder="Deneyimini paylaşabilirsin."></textarea>
+            <textarea asp-for="Comment" class="form-control ap-no-resize" rows="5" maxlength="1000" placeholder="Teslim süreci, iletişim kalitesi ve genel deneyimini paylaşabilirsin."></textarea>
+            <div class="form-text">İsteğe bağlıdır. En fazla 1000 karakter.</div>
             <span asp-validation-for="Comment" class="text-danger"></span>
         </div>
     </div>
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn ap-btn-primary">Kaydet</button>
-        <a asp-controller="Profile" asp-action="History" class="btn ap-btn-outline">İptal</a>
+        <a asp-controller="Requests" asp-action="Outgoing" class="btn ap-btn-outline">Vazgeç</a>
     </div>
 </form>
 

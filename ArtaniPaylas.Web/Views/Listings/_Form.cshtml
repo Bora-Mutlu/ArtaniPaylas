@@ -1,27 +1,32 @@
-﻿@model ListingCreateEditViewModel
+@model ListingCreateEditViewModel
 
 <div class="ap-card p-4">
+    <div asp-validation-summary="ModelOnly" class="ap-auth-alert mb-3"></div>
+
     <div class="mb-3">
         <label asp-for="Title" class="form-label fw-semibold">Başlık</label>
-        <input asp-for="Title" class="form-control" placeholder="Örn: Günlük taze sebze paketi" />
+        <input asp-for="Title" class="form-control" placeholder="Örn: XL Beden Erkek Mont" />
+        <div class="form-text">Kısa ve anlaşılır bir başlık, ilanının daha hızlı bulunmasını sağlar.</div>
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="Description" class="form-label fw-semibold">Açıklama</label>
-        <textarea asp-for="Description" class="form-control ap-no-resize" rows="5" placeholder="Paket içeriği, teslim saati ve notlarını yazabilirsin."></textarea>
+        <textarea asp-for="Description" class="form-control ap-no-resize" rows="5" placeholder="Kıyafet durumu, deformesi var mı, yaka/kol/beden ölçüsü vb. yazabilirsiniz."></textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
     <div class="row g-3">
         <div class="col-md-6">
-            <label asp-for="ExpirationDate" class="form-label fw-semibold">Son Tüketim Tarihi</label>
+            <label asp-for="ExpirationDate" class="form-label fw-semibold">İlan Son Tarihi</label>
             <input asp-for="ExpirationDate" class="form-control" type="date" />
+            <div class="form-text">Bu tarihten sonra ilan pasife alınır.</div>
             <span asp-validation-for="ExpirationDate" class="text-danger"></span>
         </div>
         <div class="col-md-6">
             <label asp-for="Location" class="form-label fw-semibold">Konum</label>
             <input asp-for="Location" class="form-control" placeholder="Örn: Üsküdar" />
+            <div class="form-text">İlçe/semt bilgisi yazman eşleşmeyi iyileştirir.</div>
             <span asp-validation-for="Location" class="text-danger"></span>
         </div>
     </div>

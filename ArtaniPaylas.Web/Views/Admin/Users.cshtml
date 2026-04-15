@@ -1,0 +1,64 @@
+@model IEnumerable<ArtaniPaylas.Core.Entities.ApplicationUser>
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+    Layout = "_AdminLayout";
+}
+
+<section class="mb-8">
+    <h1 class="text-4xl font-extrabold text-on-surface tracking-tight">Kullanıcı Yönetimi</h1>
+    <p class="text-on-surface-variant mt-2 text-lg">Sistem kullanıcılarını görüntüleyin ve aktiflik durumlarını yönetin.</p>
+</section>
+
+<section class="bg-surface-container-low p-4 md:p-6 rounded-xl">
+    <div class="flex items-center justify-between gap-3 mb-4">
+        <h2 class="text-xl font-bold text-on-surface">Kullanıcı Listesi</h2>
+        <a href="/Admin" class="text-sm px-4 py-2 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface transition-colors">Panele Dön</a>
+    </div>
+
+    <div class="overflow-x-auto rounded-xl bg-surface-container-lowest">
+        <table class="min-w-full text-sm">
+            <thead class="text-left bg-surface-container-low text-[0.6875rem] uppercase tracking-wider text-slate-500 font-bold">
+                <tr>
+                    <th class="px-4 py-3">Ad Soyad</th>
+                    <th class="px-4 py-3">E-Posta</th>
+                    <th class="px-4 py-3">Durum</th>
+                    <th class="px-4 py-3">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr class="border-b border-outline-variant/15 hover:bg-surface-container-low transition-colors">
+                        <td class="px-4 py-3 font-semibold text-on-surface">@user.FullName</td>
+                        <td class="px-4 py-3 text-on-surface-variant">@user.Email</td>
+                        <td class="px-4 py-3">
+                            @if (user.IsActive)
+                            {
+                                <span class="inline-flex items-center rounded-full bg-tertiary-container/20 text-tertiary px-3 py-1 text-xs font-bold">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center rounded-full bg-error-container text-on-error-container px-3 py-1 text-xs font-bold">Pasif</span>
+                            }
+                        </td>
+                        <td class="px-4 py-3">
+                            <form action="/Admin/ToggleUserStatus" method="post" class="inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@user.Id" />
+                                @if (user.IsActive)
+                                {
+                                    <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-error text-on-error hover:opacity-90 transition-opacity">Pasife Al</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-tertiary text-on-tertiary hover:opacity-90 transition-opacity">Aktifleştir</button>
+                                }
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+

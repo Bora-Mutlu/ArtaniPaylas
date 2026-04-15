@@ -41,20 +41,20 @@ public class RequestsController : Controller
 
         if (listing.OwnerUserId == userId)
         {
-            TempData["ErrorMessage"] = "Kendi ilan�na talep g�nderemezsin.";
+            TempData["ErrorMessage"] = "Kendi ilanına talep gönderemezsin.";
             return RedirectToAction("Details", "Listings", new { id = listingId });
         }
 
         if (listing.Status != ListingStatus.Active)
         {
-            TempData["ErrorMessage"] = "Bu ilana talep al�m� kapal�.";
+            TempData["ErrorMessage"] = "Bu ilana talep alımı kapalı.";
             return RedirectToAction("Details", "Listings", new { id = listingId });
         }
 
         var existingRequest = listing.Requests.Any(x => x.RequesterUserId == userId && x.Status == RequestStatus.Pending);
         if (existingRequest)
         {
-            TempData["ErrorMessage"] = "Bu ilan i�in zaten bekleyen bir talebin var.";
+            TempData["ErrorMessage"] = "Bu ilan için zaten bekleyen bir talebin var.";
             return RedirectToAction("Details", "Listings", new { id = listingId });
         }
 
