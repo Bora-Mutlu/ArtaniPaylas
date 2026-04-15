@@ -1,6 +1,12 @@
-﻿@model IReadOnlyCollection<Request>
+@model IReadOnlyCollection<Request>
 @{
     ViewData["Title"] = "Giden Talepler";
+    Layout = "_UserLayout";
+
+    var totalCount = Model.Count;
+    var pendingCount = Model.Count(x => x.Status == RequestStatus.Pending);
+    var approvedCount = Model.Count(x => x.Status == RequestStatus.Approved);
+    var deliveredCount = Model.Count(x => x.Status == RequestStatus.Delivered);
 }
 
 <section class="ap-page-head">
@@ -9,6 +15,33 @@
         <p class="ap-subtitle">Talep durumlarını buradan takip edebilirsin.</p>
     </div>
 </section>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Toplam Talep</small>
+            <div class="h4 mt-2 mb-0">@totalCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Bekleyen</small>
+            <div class="h4 mt-2 mb-0 text-warning">@pendingCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Onaylanan</small>
+            <div class="h4 mt-2 mb-0 text-success">@approvedCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Teslim Edilen</small>
+            <div class="h4 mt-2 mb-0 text-primary">@deliveredCount</div>
+        </div>
+    </div>
+</div>
 
 @if (!Model.Any())
 {
@@ -31,15 +64,30 @@ else
                 <tbody>
                 @foreach (var item in Model)
                 {
+                    var statusClass = item.Status switch
+                    {
+                        RequestStatus.Pending => "ap-pill ap-pill-pending",
+                        RequestStatus.Approved => "ap-pill ap-pill-active",
+                        RequestStatus.Delivered => "ap-pill ap-pill-completed",
+                        _ => "ap-pill ap-pill-danger"
+                    };
+
                     <tr>
-                        <td>@item.Listing?.Title</td>
+                        <td>
+                            <div class="fw-semibold">@item.Listing?.Title</div>
+                            <small class="text-muted">İlan No: @item.ListingId</small>
+                        </td>
                         <td>@(item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName)</td>
-                        <td>@item.Status.ToDisplayText()</td>
+                        <td><span class="@statusClass">@item.Status.ToDisplayText()</span></td>
                         <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                         <td>
                             @if (item.Status == RequestStatus.Delivered)
                             {
                                 <a asp-controller="Reviews" asp-action="Create" asp-route-requestId="@item.Id" class="btn btn-sm ap-btn-outline">Değerlendir</a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Listings" asp-action="Details" asp-route-id="@item.ListingId" class="btn btn-sm ap-btn-outline">İlanı Gör</a>
                             }
                         </td>
                     </tr>
@@ -49,3 +97,4 @@ else
         </div>
     </div>
 }
+

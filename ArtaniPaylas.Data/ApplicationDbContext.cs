@@ -17,6 +17,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Review> Reviews => Set<Review>();
 
+    public DbSet<Report> Reports => Set<Report>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -60,6 +62,24 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(x => new { x.RequestId, x.FromUserId }).IsUnique();
+        });
+
+        builder.Entity<Report>(entity =>
+        {
+            entity.HasOne(x => x.Reporter)
+                .WithMany()
+                .HasForeignKey(x => x.ReporterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.ReportedUser)
+                .WithMany()
+                .HasForeignKey(x => x.ReportedUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(x => x.ReportedListing)
+                .WithMany()
+                .HasForeignKey(x => x.ReportedListingId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

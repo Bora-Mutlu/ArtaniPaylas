@@ -1,15 +1,59 @@
-﻿@model IReadOnlyCollection<Listing>
+@model IReadOnlyCollection<Listing>
 @{
+    var activeOnly = ViewBag.ActiveOnly as bool? == true;
     ViewData["Title"] = "İlanlarım";
+    Layout = "_UserLayout";
+
+    var totalCount = Model.Count;
+    var activeCount = Model.Count(x => x.Status == ListingStatus.Active);
+    var passiveCount = Model.Count(x => x.Status != ListingStatus.Active);
+    var expiringSoonCount = Model.Count(x => x.Status == ListingStatus.Active && x.ExpirationDate.Date <= DateTime.UtcNow.Date.AddDays(3));
 }
 
 <section class="ap-page-head">
     <div>
-        <h1 class="ap-title">İlanlarım</h1>
-        <p class="ap-subtitle">Yayınladığın ilanları buradan yönetebilirsin.</p>
+        <h1 class="ap-title">@(activeOnly ? "Aktif İlanlarım" : "İlanlarım")</h1>
+        <p class="ap-subtitle">@(activeOnly ? "Sadece aktif ilanlarını görüntülüyorsun." : "Yayınladığın ilanları buradan yönetebilirsin.")</p>
     </div>
-    <a asp-action="Create" class="btn ap-btn-primary">+ Yeni İlan</a>
+    <div class="d-flex gap-2">
+        @if (activeOnly)
+        {
+            <a asp-action="MyListings" class="btn ap-btn-outline">Tüm İlanlarım</a>
+        }
+        else
+        {
+            <a asp-action="MyListings" asp-route-activeOnly="true" class="btn ap-btn-outline">Aktif İlanlarım</a>
+        }
+        <a asp-action="Create" class="btn ap-btn-primary">+ Yeni İlan</a>
+    </div>
 </section>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Toplam</small>
+            <div class="h4 mb-0 mt-2">@totalCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Aktif</small>
+            <div class="h4 mb-0 mt-2 text-success">@activeCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">Pasif / Tamamlandı</small>
+            <div class="h4 mb-0 mt-2">@passiveCount</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="ap-card p-3 h-100">
+            <small class="text-uppercase text-muted fw-semibold">3 Gün İçinde Bitecek</small>
+            <div class="h4 mb-0 mt-2 text-warning">@expiringSoonCount</div>
+        </div>
+    </div>
+</div>
 
 @if (!Model.Any())
 {
@@ -33,10 +77,21 @@ else
                 @foreach (var item in Model)
                 {
                     var isEditable = item.Status == ListingStatus.Active;
+                    var statusClass = item.Status switch
+                    {
+                        ListingStatus.Active => "ap-pill ap-pill-active",
+                        ListingStatus.Completed => "ap-pill ap-pill-completed",
+                        ListingStatus.Expired => "ap-pill ap-pill-danger",
+                        _ => "ap-pill ap-pill-pending"
+                    };
+
                     <tr>
-                        <td>@item.Title</td>
+                        <td>
+                            <div class="fw-semibold">@item.Title</div>
+                            <small class="text-muted">Yayın: @item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</small>
+                        </td>
                         <td>@item.Location</td>
-                        <td>@item.Status.ToDisplayText()</td>
+                        <td><span class="@statusClass">@item.Status.ToDisplayText()</span></td>
                         <td>@item.ExpirationDate.ToString("dd.MM.yyyy")</td>
                         <td class="text-end">
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm ap-btn-outline">Detay</a>
@@ -59,3 +114,4 @@ else
         </div>
     </div>
 }
+

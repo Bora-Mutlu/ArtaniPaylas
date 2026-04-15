@@ -1,12 +1,13 @@
 @model ListingCreateEditViewModel
 @{
-    ViewData["Title"] = "Ýlan Düzenle";
+    ViewData["Title"] = "Ä°lan DÃ¼zenle";
+    Layout = "_UserLayout";
 }
 
 <section class="ap-page-head">
     <div>
-        <h1 class="ap-title">Ýlan Düzenle</h1>
-        <p class="ap-subtitle">Ýlan bilgilerini güncelleyerek daha doðru eþleþmeler alabilirsin.</p>
+        <h1 class="ap-title">Ä°lan DÃ¼zenle</h1>
+        <p class="ap-subtitle">Ä°lan bilgilerini gÃ¼ncelleyerek daha doÄŸru eÅŸleÅŸmeler alabilirsin.</p>
     </div>
 </section>
 
@@ -14,11 +15,12 @@
     <input type="hidden" asp-for="Id" />
     <partial name="_Form" model="Model" />
     <div class="d-flex gap-2">
-        <button class="btn ap-btn-primary" type="submit">Deðiþiklikleri Kaydet</button>
-        <a asp-action="MyListings" class="btn ap-btn-outline">Ýptal</a>
+        <button class="btn ap-btn-primary" type="submit">DeÄŸiÅŸiklikleri Kaydet</button>
+        <a asp-action="MyListings" class="btn ap-btn-outline">Ä°ptal</a>
     </div>
 </form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+

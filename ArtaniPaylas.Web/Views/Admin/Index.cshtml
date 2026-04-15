@@ -1,0 +1,148 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Panel";
+    Layout = "_AdminLayout";
+    var recentActivities = (ViewBag.RecentActivities as IEnumerable<string> ?? System.Linq.Enumerable.Empty<string>()).ToList();
+}
+<header class="mb-12">
+            <h1 class="text-4xl font-extrabold text-on-surface tracking-tight">Admin Paneli v1</h1>
+            <p class="text-on-surface-variant mt-2 text-lg">Sistem yönetimi, kullanıcı ve içerik moderasyonu</p>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group">
+                <div class="absolute left-0 top-0 h-full w-[4px] bg-primary"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-label-sm uppercase tracking-wider font-bold text-slate-500 text-[0.6875rem]">Toplam Kullanıcı</p>
+                        <h3 class="text-4xl font-black text-on-surface mt-2">@ViewBag.TotalUsers</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-primary-container/20 rounded-full flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-3xl">person</span>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-[0.75rem] text-tertiary font-bold">
+                    <span class="material-symbols-outlined text-sm mr-1">groups</span>
+                    Kayıtlı toplam kullanıcı sayısı
+                </div>
+            </div>
+
+            <div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group">
+                <div class="absolute left-0 top-0 h-full w-[4px] bg-tertiary"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-label-sm uppercase tracking-wider font-bold text-slate-500 text-[0.6875rem]">Toplam İlan</p>
+                        <h3 class="text-4xl font-black text-on-surface mt-2">@ViewBag.TotalListings</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-tertiary-container/10 rounded-full flex items-center justify-center text-tertiary">
+                        <span class="material-symbols-outlined text-3xl">list_alt</span>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-[0.75rem] text-tertiary font-bold">
+                    <span class="material-symbols-outlined text-sm mr-1">calendar_month</span>
+                    Son 7 günde @ViewBag.ListingsLast7Days yeni ilan
+                </div>
+            </div>
+
+            <div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group">
+                <div class="absolute left-0 top-0 h-full w-[4px] bg-secondary"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-label-sm uppercase tracking-wider font-bold text-slate-500 text-[0.6875rem]">Aktif İlanlar</p>
+                        <h3 class="text-4xl font-black text-on-surface mt-2">@ViewBag.ActiveListings</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-secondary-container/30 rounded-full flex items-center justify-center text-secondary">
+                        <span class="material-symbols-outlined text-3xl">check_circle</span>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-[0.75rem] text-slate-400 font-bold">
+                    Toplam ilanların aktif olan kısmı
+                </div>
+            </div>
+
+            <div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group">
+                <div class="absolute left-0 top-0 h-full w-[4px] bg-error"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-label-sm uppercase tracking-wider font-bold text-slate-500 text-[0.6875rem]">Bekleyen Şikayetler</p>
+                        <h3 class="text-4xl font-black text-on-surface mt-2">@ViewBag.PendingReports</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-error-container/30 rounded-full flex items-center justify-center text-error">
+                        <span class="material-symbols-outlined text-3xl">report</span>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-[0.75rem] text-tertiary font-bold">
+                    <span class="material-symbols-outlined text-sm mr-1">verified</span>
+                    Çözülen rapor sayısı: @ViewBag.ResolvedReports
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-surface-container-low p-8 rounded-xl flex flex-col justify-between hover:bg-surface-container-lowest transition-all duration-300 group">
+                <div>
+                    <div class="h-16 w-16 mb-6 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-4xl">manage_accounts</span>
+                    </div>
+                    <h4 class="text-2xl font-bold text-on-surface mb-4">Kullanıcıları Yönet</h4>
+                    <p class="text-on-surface-variant leading-relaxed mb-8">Üyeleri listeleyin, hesapları Aktif/Pasif duruma alın.</p>
+                </div>
+                <a href="/Admin/Users" class="ap-gradient-primary text-on-primary py-3.5 px-6 rounded-xl font-bold text-sm inline-flex items-center justify-center gap-2 w-full transition-all hover:shadow-lg hover:shadow-primary/20">
+                    Kullanıcı Yönetimi
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="bg-surface-container-low p-8 rounded-xl flex flex-col justify-between hover:bg-surface-container-lowest transition-all duration-300 group">
+                <div>
+                    <div class="h-16 w-16 mb-6 rounded-2xl bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-4xl">post_add</span>
+                    </div>
+                    <h4 class="text-2xl font-bold text-on-surface mb-4">İlanları Yönet</h4>
+                    <p class="text-on-surface-variant leading-relaxed mb-8">Tüm ilanları inceleyin ve uygunsuz olanları Askıya alın.</p>
+                </div>
+                <a href="/Admin/Listings" class="bg-tertiary text-on-tertiary py-3.5 px-6 rounded-xl font-bold text-sm inline-flex items-center justify-center gap-2 w-full transition-all hover:shadow-lg hover:shadow-tertiary/20">
+                    İlan Yönetimi
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="bg-surface-container-low p-8 rounded-xl flex flex-col justify-between hover:bg-surface-container-lowest transition-all duration-300 group">
+                <div>
+                    <div class="h-16 w-16 mb-6 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-4xl">gavel</span>
+                    </div>
+                    <h4 class="text-2xl font-bold text-on-surface mb-4">Şikayet İncelemeleri</h4>
+                    <p class="text-on-surface-variant leading-relaxed mb-8">Gelen kullanıcı veya ilan şikayetlerini sonuçlandırın.</p>
+                </div>
+                <a href="/Admin/Reports" class="bg-secondary text-on-secondary py-3.5 px-6 rounded-xl font-bold text-sm inline-flex items-center justify-center gap-2 w-full transition-all hover:shadow-lg hover:shadow-secondary/20">
+                    Şikayet Yönetimi
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="mt-12">
+            <div class="bg-surface-container-lowest p-8 rounded-xl relative">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-[80%] w-[4px] bg-primary"></div>
+                <div class="flex flex-col gap-6">
+                    <div class="max-w-md">
+                        <h4 class="text-xl font-bold text-on-surface">Son Aktiviteler</h4>
+                        <p class="text-on-surface-variant text-sm mt-2">Sistemdeki son ilan ve rapor hareketleri gerçek zamanlı olarak listelenir.</p>
+                    </div>
+                    @if (recentActivities.Count == 0)
+                    {
+                        <div class="text-on-surface-variant text-sm">Henüz aktivite kaydı bulunmuyor.</div>
+                    }
+                    else
+                    {
+                        <ul class="space-y-2 text-sm text-on-surface-variant">
+                            @foreach (var activity in recentActivities)
+                            {
+                                <li class="bg-surface-container-low rounded-lg px-4 py-2">@activity</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </section>

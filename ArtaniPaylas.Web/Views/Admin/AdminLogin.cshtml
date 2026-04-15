@@ -1,0 +1,96 @@
+@model ArtaniPaylas.Core.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Yönetici Girişi";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yönetici Girişi - Artanı Paylaş</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            background-color: #212529;
+            color: #f8f9fa;
+        }
+        .admin-login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background-color: #343a40;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .form-control {
+            background-color: #495057;
+            border: 1px solid #6c757d;
+            color: #fff;
+        }
+        .form-control:focus {
+            background-color: #495057;
+            border-color: #0d6efd;
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .text-danger {
+            color: #ff6b6b !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-login-container container">
+        <div class="col-md-6 col-lg-5">
+            <div class="card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">🛡️ Yönetici Girişi</h2>
+                    <p class="text-secondary">Sistem Yönetim Paneli</p>
+                </div>
+                
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger p-2 mb-4" role="alert">
+                        <div asp-validation-summary="All" class="mb-0 list-unstyled" style="font-size: 0.9rem;"></div>
+                    </div>
+                }
+
+                <form action="/Admin/Login" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label text-light">E-Posta Adresi</label>
+                        <input asp-for="Email" class="form-control form-control-lg" placeholder="admin@admin.com" />
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label asp-for="Password" class="form-label text-light">Şifre</label>
+                        <input asp-for="Password" class="form-control form-control-lg" />
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label text-secondary">Aygıtta Hatırla</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3 fw-bold">Giriş Yap</button>
+
+                    <div class="text-center mt-4">
+                        <a href="/" class="text-decoration-none text-light opacity-50 hover-opacity-100 transition">← Siteye Dön</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

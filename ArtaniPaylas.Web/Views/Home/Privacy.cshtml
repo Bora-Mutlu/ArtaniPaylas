@@ -1,18 +1,229 @@
 @{
-    ViewData["Title"] = "Gizlilik";
+    Layout = null;
 }
 
-<section class="ap-page-head">
-    <div>
-        <h1 class="ap-title">Gizlilik Politikas� (MVP)</h1>
-        <p class="ap-subtitle">Bu s�r�mde veri kullan�m� yaln�zca platform i�leyi�i i�in yap�l�r.</p>
-    </div>
-</section>
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Artanı Paylaş - Gizlilik Politikası</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:ital,wght@0,500;0,700;0,800;1,500&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#005137",
+                        "primary": "#006948",
+                        "primary-fixed-dim": "#68dba9",
+                        "surface": "#fbf9f6",
+                        "on-tertiary-container": "#fffbff",
+                        "surface-container-low": "#f5f3f0",
+                        "secondary-container": "#6cf8bb",
+                        "error": "#ba1a1a",
+                        "tertiary": "#9b3e3b",
+                        "outline": "#6d7a72",
+                        "surface-dim": "#dbdad7",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#ba5551",
+                        "surface-bright": "#fbf9f6",
+                        "on-secondary-fixed": "#002113",
+                        "surface-container": "#efeeeb",
+                        "on-secondary-container": "#00714d",
+                        "on-tertiary-fixed-variant": "#7f2928",
+                        "inverse-surface": "#30312f",
+                        "on-surface": "#1b1c1a",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "secondary": "#006c49",
+                        "surface-container-high": "#eae8e5",
+                        "on-background": "#1b1c1a",
+                        "secondary-fixed-dim": "#4edea3",
+                        "inverse-primary": "#68dba9",
+                        "background": "#fbf9f6",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-container-highest": "#e4e2df",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e4e2df",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#ffdad7",
+                        "primary-container": "#00855d",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-surface-variant": "#3d4a42",
+                        "on-primary-fixed": "#002114",
+                        "outline-variant": "#bccac0",
+                        "inverse-on-surface": "#f2f0ed",
+                        "on-primary-container": "#f5fff7",
+                        "surface-tint": "#006c4a",
+                        "primary-fixed": "#85f8c4",
+                        "on-tertiary-fixed": "#410004"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <header class="fixed top-0 w-full z-50 bg-emerald-50/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-sm dark:shadow-none">
+        <nav class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+            <a asp-controller="Home" asp-action="Index" class="text-xl font-bold text-emerald-900 dark:text-emerald-50 tracking-tight font-headline no-underline">
+                Artanı Paylaş
+            </a>
+            <div class="hidden md:flex items-center gap-8 font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight">
+                <a asp-controller="Home" asp-action="Index" class="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 transition-colors no-underline">Ana Sayfa</a>
+                <a asp-controller="Listings" asp-action="Index" class="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 transition-colors no-underline">İlanlar</a>
+                <a asp-controller="Home" asp-action="Privacy" class="text-emerald-700 dark:text-emerald-400 font-bold border-b-2 border-emerald-600 no-underline">Gizlilik</a>
+            </div>
+            <a asp-controller="Listings" asp-action="Create" class="px-6 py-2 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-medium text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/10 no-underline">
+                İlan Ver
+            </a>
+        </nav>
+    </header>
 
-<div class="ap-card p-4">
-    <ul class="mb-0 space-y-2 text-slate-700">
-        <li>Ki�isel veriler yaln�zca hesap, ilan ve talep ak���n� �al��t�rmak i�in kullan�l�r.</li>
-        <li>Parola bilgileri d�z metin tutulmaz, Identity taraf�ndan hashlenir.</li>
-        <li>G�venlik amac�yla kimlik do�rulama, antiforgery ve rate-limit kontrolleri aktiftir.</li>
-    </ul>
-</div>
+    <main class="pt-24">
+        <section class="relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-8 py-20 md:py-28 grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+                <div>
+                    <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-xs font-bold uppercase tracking-wider mb-5">
+                        <span class="material-symbols-outlined text-base">shield_lock</span>
+                        Veri Güvenliği
+                    </span>
+                    <h1 class="font-headline font-extrabold text-4xl md:text-6xl leading-[1.08] tracking-tight mb-6">
+                        Gizliliğiniz,
+                        <span class="text-primary">platformun temelidir.</span>
+                    </h1>
+                    <p class="text-on-surface-variant text-lg leading-relaxed max-w-xl mb-8">
+                        Artanı Paylaş üzerinde paylaştığınız bilgiler yalnızca platformun güvenli ve doğru çalışması için işlenir. Bu sayfa, hangi verileri neden kullandığımızı şeffaf şekilde özetler.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <a asp-controller="Home" asp-action="Index" class="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full font-semibold text-base transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20 no-underline">
+                            Ana Sayfaya Dön
+                        </a>
+                        <a asp-controller="Listings" asp-action="Index" class="px-8 py-4 bg-surface-container-highest text-on-surface rounded-full font-semibold text-base transition-all hover:bg-surface-container-high no-underline">
+                            İlanları Gör
+                        </a>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="bg-surface-container-lowest rounded-[2rem] p-8 md:p-10 shadow-2xl border border-outline-variant/25">
+                        <h2 class="text-2xl font-headline font-bold mb-6">Kısa Özet</h2>
+                        <div class="space-y-5 text-on-surface-variant">
+                            <div class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-primary mt-0.5">check_circle</span>
+                                <p>Kişisel veriler yalnızca hesap, ilan ve talep süreçlerini yönetmek için kullanılır.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-primary mt-0.5">password</span>
+                                <p>Parolalar düz metin tutulmaz, kimlik sistemi tarafından güvenli şekilde hashlenir.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-primary mt-0.5">verified_user</span>
+                                <p>CSRF koruması, kimlik doğrulama ve hız sınırlama gibi güvenlik katmanları aktiftir.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute -z-10 -bottom-8 -right-8 w-44 h-44 rounded-full bg-secondary-container/40 blur-2xl"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-12 md:py-20 bg-surface-container-low">
+            <div class="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                <article class="bg-surface-container-lowest rounded-2xl p-7 shadow-sm border border-outline-variant/20">
+                    <div class="w-12 h-12 rounded-xl bg-primary-container/10 text-primary flex items-center justify-center mb-5">
+                        <span class="material-symbols-outlined">database</span>
+                    </div>
+                    <h3 class="text-xl font-headline font-bold mb-3">Toplanan Veriler</h3>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        Hesap bilgileriniz, ilan içerikleri ve talep kayıtları; hizmeti sürdürebilmek ve kullanıcı deneyimini iyileştirmek için sınırlı kapsamda tutulur.
+                    </p>
+                </article>
+
+                <article class="bg-surface-container-lowest rounded-2xl p-7 shadow-sm border border-outline-variant/20">
+                    <div class="w-12 h-12 rounded-xl bg-primary-container/10 text-primary flex items-center justify-center mb-5">
+                        <span class="material-symbols-outlined">settings_suggest</span>
+                    </div>
+                    <h3 class="text-xl font-headline font-bold mb-3">Kullanım Amacı</h3>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        Veriler; ilan eşleşmesi, iletişim akışı, güvenlik doğrulaması ve operasyonel raporlama amaçları dışında kullanılmaz.
+                    </p>
+                </article>
+
+                <article class="bg-surface-container-lowest rounded-2xl p-7 shadow-sm border border-outline-variant/20">
+                    <div class="w-12 h-12 rounded-xl bg-primary-container/10 text-primary flex items-center justify-center mb-5">
+                        <span class="material-symbols-outlined">gpp_good</span>
+                    </div>
+                    <h3 class="text-xl font-headline font-bold mb-3">Güvenlik Önlemleri</h3>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">
+                        Erişim kontrolleri, doğrulama mekanizmaları ve standart güvenlik politikaları ile veri bütünlüğü korunur.
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        <section class="py-16 md:py-24">
+            <div class="max-w-5xl mx-auto px-8">
+                <div class="bg-gradient-to-br from-primary to-primary-container rounded-[2.5rem] p-10 md:p-14 text-on-primary relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 28px 28px;"></div>
+                    <div class="relative z-10">
+                        <h2 class="text-3xl md:text-4xl font-headline font-bold mb-5">Sorunuz mu var?</h2>
+                        <p class="text-base md:text-lg opacity-90 mb-8 max-w-2xl">
+                            Gizlilik politikamızla ilgili sorularınız için bizimle iletişime geçebilir, platformu kullanmadan önce tüm detayları inceleyebilirsiniz.
+                        </p>
+                        <div class="flex flex-wrap gap-4">
+                            <a asp-controller="Home" asp-action="Index" class="px-7 py-3.5 bg-surface-container-lowest text-primary rounded-full font-bold hover:scale-105 transition-transform no-underline">
+                                Ana Sayfaya Git
+                            </a>
+                            <a asp-controller="Account" asp-action="Register" class="px-7 py-3.5 border-2 border-on-primary/30 rounded-full font-bold hover:bg-on-primary/10 transition-colors text-on-primary no-underline">
+                                Topluluğa Katıl
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-zinc-100 dark:bg-zinc-900 w-full py-12">
+        <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-7xl mx-auto gap-8">
+            <div class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 font-headline">
+                Artanı Paylaş
+            </div>
+            <div class="flex flex-wrap justify-center gap-8 font-['Inter'] text-sm leading-relaxed">
+                <a asp-controller="Home" asp-action="Privacy" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100 no-underline">Gizlilik Politikası</a>
+                <a asp-controller="Listings" asp-action="Index" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100 no-underline">İlanlar</a>
+                <a asp-controller="Home" asp-action="Index" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100 no-underline">Ana Sayfa</a>
+            </div>
+            <div class="text-zinc-500 dark:text-zinc-400 font-['Inter'] text-sm leading-relaxed">
+                © 2026 Artanı Paylaş. Bilinçli Küratörlük Hareketi.
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

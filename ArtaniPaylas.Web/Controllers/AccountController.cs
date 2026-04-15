@@ -38,7 +38,12 @@ public class AccountController : Controller
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
-            return LocalRedirect(returnUrl ?? Url.Content("~/"));
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+            return RedirectToAction("Index", "UserDashboard");
         }
 
         ModelState.AddModelError(string.Empty, "Geçersiz giriş denemesi. Bilgilerinizi kontrol edip tekrar deneyin.");

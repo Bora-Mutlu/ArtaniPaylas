@@ -1,112 +1,297 @@
-﻿@{
-    ViewData["Title"] = "Ana Sayfa";
+@{
+    Layout = null;
 }
 
-<section class="container mx-auto py-12 lg:py-20">
-    <div class="row align-items-center g-5">
-        <div class="col-lg-6">
-            <span class="inline-block py-1 px-3 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold tracking-wider uppercase mb-4">
-                Sosyal Fayda Odaklı Platform
-            </span>
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
-                Artanı Paylaş ile israfı azalt, <span class="text-emerald-600">dayanışmayı büyüt.</span>
-            </h1>
-            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
-                Amacımız, kullanılabilir durumdaki fazla gıdayı güvenli şekilde ihtiyaç sahiplerine ulaştırmak.
-                Kullanıcılarımızla birlikte daha sürdürülebilir ve daha adil bir paylaşım ağı kuruyoruz.
-            </p>
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Artanı Paylaş - Bilinçli Küratörlük Hareketi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:ital,wght@0,500;0,700;0,800;1,500&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#005137",
+                        "primary": "#006948",
+                        "primary-fixed-dim": "#68dba9",
+                        "surface": "#fbf9f6",
+                        "on-tertiary-container": "#fffbff",
+                        "surface-container-low": "#f5f3f0",
+                        "secondary-container": "#6cf8bb",
+                        "error": "#ba1a1a",
+                        "tertiary": "#9b3e3b",
+                        "outline": "#6d7a72",
+                        "surface-dim": "#dbdad7",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#ba5551",
+                        "surface-bright": "#fbf9f6",
+                        "on-secondary-fixed": "#002113",
+                        "surface-container": "#efeeeb",
+                        "on-secondary-container": "#00714d",
+                        "on-tertiary-fixed-variant": "#7f2928",
+                        "inverse-surface": "#30312f",
+                        "on-surface": "#1b1c1a",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "secondary": "#006c49",
+                        "surface-container-high": "#eae8e5",
+                        "on-background": "#1b1c1a",
+                        "secondary-fixed-dim": "#4edea3",
+                        "inverse-primary": "#68dba9",
+                        "background": "#fbf9f6",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-container-highest": "#e4e2df",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e4e2df",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#ffdad7",
+                        "primary-container": "#00855d",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-surface-variant": "#3d4a42",
+                        "on-primary-fixed": "#002114",
+                        "outline-variant": "#bccac0",
+                        "inverse-on-surface": "#f2f0ed",
+                        "on-primary-container": "#f5fff7",
+                        "surface-tint": "#006c4a",
+                        "primary-fixed": "#85f8c4",
+                        "on-tertiary-fixed": "#410004"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
 
-            <div class="d-flex flex-wrap gap-3 mb-8">
-                <a asp-controller="Listings" asp-action="Index" class="ap-cta ap-cta-primary text-decoration-none">
-                    İlanları Gör
-                </a>
-                <a asp-controller="Listings" asp-action="Create" class="ap-cta ap-cta-secondary text-decoration-none">
-                    İlan Oluştur
-                </a>
+        .glass-nav {
+            background: rgba(251, 249, 246, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <header class="fixed top-0 w-full z-50 bg-emerald-50/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-sm dark:shadow-none">
+        <nav class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+            <div class="text-xl font-bold text-emerald-900 dark:text-emerald-50 tracking-tight font-headline">
+                Artanı Paylaş
             </div>
+            <div class="hidden md:flex items-center gap-8 font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight">
+                <a asp-controller="Listings" asp-action="Index" class="text-emerald-700 dark:text-emerald-400 font-bold border-b-2 border-emerald-600 hover:text-emerald-600 transition-colors">İlanlar</a>
+                <a href="#hakkimizda" class="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 transition-colors">Hakkımızda</a>
+                <a href="#nasil-calisir" class="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 transition-colors">Nasıl Çalışır</a>
+            </div>
+            <a asp-controller="Listings" asp-action="Create" class="px-6 py-2 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-medium text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/10 no-underline">
+                İlan Ver
+            </a>
+        </nav>
+    </header>
 
-            <div class="row g-3 border-top border-gray-200 pt-6 mt-2">
-                <div class="col-sm-4">
-                    <div class="text-sm text-gray-500">Hedef</div>
-                    <strong class="text-gray-900">İsrafı Azaltmak</strong>
+    <main class="pt-20">
+        <section class="relative min-h-[870px] flex items-center overflow-hidden">
+            <div class="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="z-10">
+                    <h1 class="font-headline font-extrabold text-display-lg text-5xl md:text-6xl text-on-surface leading-[1.1] mb-6 tracking-tight">
+                        Artanı Paylaş ile <br />
+                        <span class="text-primary">israfı azalt,</span> <br />
+                        dayanışmayı büyüt.
+                    </h1>
+                    <p class="text-on-surface-variant text-lg leading-relaxed mb-10 max-w-lg">
+                        Gardırobunuzda bekleyen, sevgiyle kullanılmış kıyafetleri yeni sahipleriyle buluşturun. Paylaşmanın ve sürdürülebilirliğin en şık yoluyla topluluğumuza katılın.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <a asp-controller="Listings" asp-action="Index" class="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full font-semibold text-lg transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20 no-underline">
+                            İlanları Gör
+                        </a>
+                        <a asp-controller="Listings" asp-action="Create" class="px-8 py-4 bg-surface-container-highest text-on-surface rounded-full font-semibold text-lg transition-all hover:bg-surface-container-high no-underline">
+                            İlan Oluştur
+                        </a>
+                    </div>
                 </div>
-                <div class="col-sm-4">
-                    <div class="text-sm text-gray-500">Yaklaşım</div>
-                    <strong class="text-gray-900">Güvenli Akış</strong>
+                <div class="relative">
+                    <div class="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700">
+                        <img alt="Sustainable Fashion" class="w-full h-full object-cover" src="/images/home/indexfoto.png" />
+                    </div>
+                    <div class="absolute -bottom-6 -left-6 bg-surface-container-lowest p-6 rounded-2xl shadow-xl max-w-[200px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-primary text-3xl">eco</span>
+                            <span class="font-headline font-bold text-2xl text-on-surface">500+</span>
+                        </div>
+                        <p class="text-sm text-on-surface-variant font-medium">Bu hafta paylaşılan ürün adedi</p>
+                    </div>
                 </div>
-                <div class="col-sm-4">
-                    <div class="text-sm text-gray-500">Sonuç</div>
-                    <strong class="text-gray-900">Hızlı Eşleşme</strong>
+            </div>
+            <div class="absolute top-0 right-0 w-1/3 h-full bg-emerald-50 -z-10 rounded-l-[100px]"></div>
+        </section>
+
+        <section class="py-16 bg-surface-container-low">
+            <div class="max-w-7xl mx-auto px-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center">
+                            <span class="material-symbols-outlined text-on-secondary-container text-2xl">recycling</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline font-bold text-xl">İsrafı Azaltmak</h3>
+                            <p class="text-on-surface-variant text-sm">Gelecek nesillere daha temiz bir dünya.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center">
+                            <span class="material-symbols-outlined text-on-secondary-container text-2xl">verified_user</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline font-bold text-xl">Güvenli Akış</h3>
+                            <p class="text-on-surface-variant text-sm">Şeffaf ve güvenilir topluluk etkileşimi.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center">
+                            <span class="material-symbols-outlined text-on-secondary-container text-2xl">bolt</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline font-bold text-xl">Hızlı Eşleşme</h3>
+                            <p class="text-on-surface-variant text-sm">İhtiyaç anında anında çözüm.</p>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </section>
+
+        <section id="hakkimizda" class="py-24 max-w-7xl mx-auto px-8">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                <div class="md:col-span-8 bg-surface-container-lowest p-12 rounded-[2.5rem] transition-all hover:shadow-lg hover:shadow-emerald-900/5 group">
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <span class="px-4 py-1.5 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Vizyonumuz</span>
+                            <h2 class="text-4xl font-headline font-bold">Sitemizin Amacı</h2>
+                        </div>
+                        <span class="material-symbols-outlined text-5xl text-primary/20 group-hover:text-primary transition-colors">volunteer_activism</span>
+                    </div>
+                    <p class="text-on-surface-variant text-lg leading-relaxed max-w-2xl">
+                        Artanı Paylaş, tüketim çılgınlığının önüne geçmek ve tekstil atıklarını azaltmak amacıyla kurulmuş bir topluluk platformudur. Sadece bir eşya paylaşımı değil, bilinçli bir yaşam biçimi oluşturmayı hedefliyoruz.
+                    </p>
+                </div>
+                <div class="md:col-span-4 bg-primary text-on-primary p-12 rounded-[2.5rem] flex flex-col justify-end">
+                    <span class="material-symbols-outlined text-6xl mb-6">auto_awesome</span>
+                    <h3 class="text-2xl font-headline font-bold mb-4">Temel Hedeflerimiz</h3>
+                    <ul class="space-y-3 opacity-90">
+                        <li class="flex items-center gap-2 text-sm"><span class="w-1.5 h-1.5 bg-secondary-fixed rounded-full"></span> Döngüsel ekonomi</li>
+                        <li class="flex items-center gap-2 text-sm"><span class="w-1.5 h-1.5 bg-secondary-fixed rounded-full"></span> Toplumsal dayanışma</li>
+                        <li class="flex items-center gap-2 text-sm"><span class="w-1.5 h-1.5 bg-secondary-fixed rounded-full"></span> Sürdürülebilir moda</li>
+                    </ul>
+                </div>
+                <div class="md:col-span-4 aspect-square rounded-[2.5rem] overflow-hidden">
+                    <img alt="Texture" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAkGTHS75CEZIhyDx35WMfrDRCjCjh4ixlh44mzwqE9k0ffySx5qXn0sazWCTIzzbEXrR1n1AUxlVmXPyiH8wDnnOHtbt8faiKriQgv28UxCHs8Eb-Y08Vpu2N9mcyuXHH45oNvjl8Az3wmZfoFl4cfKDH_gODxcCBOkAUVrOiA2q-AMPLi4o1uH-D3kA32iMSWg1dsKszs7fulUr6WoocX-KCcAW4kFeVa2SyMQvR0YxE_rHnC8fBeCzbJFM9aQUejJK_ohIrS-k" />
+                </div>
+                <div class="md:col-span-8 bg-surface-container p-12 rounded-[2.5rem]">
+                    <h2 class="text-3xl font-headline font-bold mb-6">Neden Artanı Paylaş?</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-bold text-primary mb-2">Kolay Kullanım</h4>
+                            <p class="text-on-surface-variant text-sm">Karmaşık formlar yok. Dakikalar içinde ilanınızı oluşturun ve paylaşmaya başlayın.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary mb-2">Yerel Topluluk</h4>
+                            <p class="text-on-surface-variant text-sm">Yakınınızdaki kişilerle eşleşerek kargo maliyetlerini ve karbon ayak izini azaltın.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="nasil-calisir" class="py-24 bg-surface-container-low overflow-hidden">
+            <div class="max-w-7xl mx-auto px-8">
+                <div class="text-center mb-20">
+                    <h2 class="text-4xl font-headline font-bold mb-4">Nasıl Çalışır?</h2>
+                    <p class="text-on-surface-variant max-w-xl mx-auto italic">Paylaşmak hiç bu kadar basit olmamıştı.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-16 relative">
+                    <div class="hidden md:block absolute top-1/2 left-0 w-full h-px bg-outline-variant/30 -translate-y-12"></div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-20 h-20 bg-surface-container-lowest rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border-4 border-surface-container-low">
+                            <span class="text-3xl font-headline font-bold text-primary">01</span>
+                        </div>
+                        <div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <span class="material-symbols-outlined text-primary text-3xl">add_photo_alternate</span>
+                        </div>
+                        <h3 class="text-xl font-headline font-bold mb-3">İlan Oluştur</h3>
+                        <p class="text-on-surface-variant text-sm px-4">Paylaşmak istediğiniz eşyanın fotoğrafını çekin ve kısa bir açıklama ekleyin.</p>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-20 h-20 bg-surface-container-lowest rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border-4 border-surface-container-low">
+                            <span class="text-3xl font-headline font-bold text-primary">02</span>
+                        </div>
+                        <div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <span class="material-symbols-outlined text-primary text-3xl">handshake</span>
+                        </div>
+                        <h3 class="text-xl font-headline font-bold mb-3">Talep ve Eşleşme</h3>
+                        <p class="text-on-surface-variant text-sm px-4">İhtiyaç sahipleriyle güvenli bir şekilde mesajlaşın ve eşleşmeyi tamamlayın.</p>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-20 h-20 bg-surface-container-lowest rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border-4 border-surface-container-low">
+                            <span class="text-3xl font-headline font-bold text-primary">03</span>
+                        </div>
+                        <div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <span class="material-symbols-outlined text-primary text-3xl">local_shipping</span>
+                        </div>
+                        <h3 class="text-xl font-headline font-bold mb-3">Güvenli Teslimat</h3>
+                        <p class="text-on-surface-variant text-sm px-4">Belirlediğiniz lokasyonda veya kargo ile ürününüzü yeni sahibine ulaştırın.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24 max-w-5xl mx-auto px-8">
+            <div class="bg-gradient-to-br from-primary to-primary-container rounded-[3rem] p-12 md:p-20 text-center text-on-primary relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 32px 32px;"></div>
+                <h2 class="text-3xl md:text-5xl font-headline font-bold mb-8 relative z-10">Bilinçli Küratörlük Hareketine Bugün Katılın</h2>
+                <p class="text-lg opacity-90 mb-12 max-w-2xl mx-auto relative z-10">Dünyayı daha yaşanabilir kılmak için küçük bir adım, bir paylaşım yeterli.</p>
+                <div class="flex flex-wrap justify-center gap-6 relative z-10">
+                    <a asp-controller="Account" asp-action="Register" class="px-10 py-4 bg-surface-container-lowest text-primary rounded-full font-bold text-lg hover:scale-105 transition-transform no-underline">Kayıt Ol</a>
+                    <a asp-controller="Home" asp-action="Privacy" class="px-10 py-4 border-2 border-on-primary/30 rounded-full font-bold text-lg hover:bg-on-primary/10 transition-colors no-underline text-on-primary">Daha Fazla Bilgi</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-zinc-100 dark:bg-zinc-900 w-full py-12">
+        <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-7xl mx-auto gap-8">
+            <div class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 font-headline">
+                Artanı Paylaş
+            </div>
+            <div class="flex flex-wrap justify-center gap-8 font-['Inter'] text-sm leading-relaxed">
+                <a asp-controller="Home" asp-action="Privacy" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100">İletişim</a>
+                <a asp-controller="Home" asp-action="Privacy" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100">Kullanım Koşulları</a>
+                <a asp-controller="Home" asp-action="Privacy" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100">Gizlilik Politikası</a>
+            </div>
+            <div class="text-zinc-500 dark:text-zinc-400 font-['Inter'] text-sm leading-relaxed">
+                © 2026 Artanı Paylaş. Bilinçli Küratörlük Hareketi.
             </div>
         </div>
-
-        <div class="col-lg-6">
-            <div class="ap-home-photo-wrap">
-                <div class="ap-home-photo" role="img" aria-label="Dayanışma ve Paylaşım görsel alanı"></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="container mx-auto py-10">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-100 border-b-4 border-b-emerald-500">
-                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-6 text-2xl">
-                    🎯
-                </div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Sitemizin Amacı</h2>
-                <p class="text-gray-600 leading-relaxed">
-                    İhtiyaç sahibi bireylerin kullanılabilir gıdaya erişimini dijital araçlarla kolaylaştırmak ve hızlandırmak.
-                </p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-100 border-b-4 border-b-emerald-500">
-                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-6 text-2xl">
-                    ⭐
-                </div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Temel Hedeflerimiz</h2>
-                <p class="text-gray-600 leading-relaxed">
-                    Güvenli paylaşım, şeffaf süreç yönetimi ve yerel dayanışmayı artırarak güçlü bir topluluk etkisi oluşturmak.
-                </p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-100 border-b-4 border-b-emerald-500">
-                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-6 text-2xl">
-                    🌱
-                </div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">Neden Artanı Paylaş?</h2>
-                <p class="text-gray-600 leading-relaxed">
-                    Çünkü dünyamızın kaynakları sınırlı; fazla gıda çöpe değil, saygın bir şekilde ihtiyaç sahibine ulaşmalı.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="container mx-auto py-12 mb-10">
-    <div class="bg-emerald-50 rounded-[2.5rem] p-10 md:p-16 text-center shadow-inner">
-        <h2 class="text-3xl font-extrabold text-gray-900 mb-10">Nasıl Çalışır?</h2>
-
-        <div class="row g-5">
-            <div class="col-md-4 relative">
-                <div class="w-16 h-16 mx-auto bg-white text-emerald-600 font-bold text-2xl rounded-full flex items-center justify-center shadow-md mb-4">1</div>
-                <h3 class="font-bold text-lg text-gray-900 mb-2">İlan Oluştur</h3>
-                <p class="text-gray-600 text-sm">Elinizdeki fazla veya paylaşılabilir durumdaki gıdaları sisteme ekleyin.</p>
-            </div>
-            <div class="col-md-4 relative">
-                <div class="w-16 h-16 mx-auto bg-white text-emerald-600 font-bold text-2xl rounded-full flex items-center justify-center shadow-md mb-4">2</div>
-                <h3 class="font-bold text-lg text-gray-900 mb-2">Talep ve Eşleşme</h3>
-                <p class="text-gray-600 text-sm">İhtiyaç sahipleri veya kurumlar ilanlara talep göndersin ve eşleşme sağlansın.</p>
-            </div>
-            <div class="col-md-4 relative">
-                <div class="w-16 h-16 mx-auto bg-white text-emerald-600 font-bold text-2xl rounded-full flex items-center justify-center shadow-md mb-4">3</div>
-                <h3 class="font-bold text-lg text-gray-900 mb-2">Güvenli Teslimat</h3>
-                <p class="text-gray-600 text-sm">Sistem üzerinden onaylanan işlem sonrası gıda güvenle sahibine ulaşsın.</p>
-            </div>
-        </div>
-    </div>
-</section>
+    </footer>
+</body>
+</html>

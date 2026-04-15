@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Ayarlar";
+    Layout = "_AdminLayout";
+}
+
+<section class="mb-8">
+    <h1 class="text-4xl font-extrabold text-on-surface tracking-tight">Admin Ayarları</h1>
+    <p class="text-on-surface-variant mt-2 text-lg">Panel erişimi ve yardımcı bağlantılar için temel yönetim seçenekleri.</p>
+</section>
+
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <article class="bg-surface-container-low p-6 rounded-xl">
+        <h2 class="text-xl font-bold text-on-surface mb-3">Hızlı İşlemler</h2>
+        <p class="text-on-surface-variant mb-6">Sık kullanılan yönetsel işlemlere buradan hızlıca geçiş yapabilirsiniz.</p>
+
+        <div class="space-y-3">
+            <a href="/Admin/Users" class="w-full inline-flex items-center justify-between px-4 py-3 rounded-xl bg-surface-container-lowest hover:bg-surface transition-colors">
+                <span class="font-semibold text-on-surface">Kullanıcı Yönetimi</span>
+                <span class="material-symbols-outlined text-primary">arrow_forward</span>
+            </a>
+            <a href="/Admin/Listings" class="w-full inline-flex items-center justify-between px-4 py-3 rounded-xl bg-surface-container-lowest hover:bg-surface transition-colors">
+                <span class="font-semibold text-on-surface">İlan Moderasyonu</span>
+                <span class="material-symbols-outlined text-primary">arrow_forward</span>
+            </a>
+            <a href="/Admin/Reports" class="w-full inline-flex items-center justify-between px-4 py-3 rounded-xl bg-surface-container-lowest hover:bg-surface transition-colors">
+                <span class="font-semibold text-on-surface">Şikayet İncelemeleri</span>
+                <span class="material-symbols-outlined text-primary">arrow_forward</span>
+            </a>
+        </div>
+    </article>
+
+    <article class="bg-surface-container-low p-6 rounded-xl">
+        <h2 class="text-xl font-bold text-on-surface mb-3">Hesap ve Güvenlik</h2>
+        <p class="text-on-surface-variant mb-6">Admin oturumunu güvenli şekilde kapatabilir veya siteye geri dönebilirsiniz.</p>
+
+        <div class="space-y-3">
+            <a href="/" class="w-full inline-flex items-center justify-between px-4 py-3 rounded-xl bg-surface-container-lowest hover:bg-surface transition-colors">
+                <span class="font-semibold text-on-surface">Siteye Dön</span>
+                <span class="material-symbols-outlined text-primary">home</span>
+            </a>
+
+            <form action="/Account/Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="w-full inline-flex items-center justify-between px-4 py-3 rounded-xl bg-error text-on-error font-semibold hover:opacity-90 transition-opacity">
+                    <span>Oturumu Kapat</span>
+                    <span class="material-symbols-outlined">logout</span>
+                </button>
+            </form>
+        </div>
+    </article>
+</section>

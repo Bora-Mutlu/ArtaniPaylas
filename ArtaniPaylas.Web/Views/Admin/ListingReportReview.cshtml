@@ -1,0 +1,249 @@
+@model ArtaniPaylas.Core.Entities.Report
+@{
+    ViewData["Title"] = "İlan Raporu İnceleme";
+    Layout = "_AdminLayout";
+
+    var listing = Model.ReportedListing;
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+
+    var listingStatusClass = listing?.Status switch
+    {
+        ArtaniPaylas.Core.Enums.ListingStatus.Active => "bg-tertiary-container/20 text-tertiary",
+        ArtaniPaylas.Core.Enums.ListingStatus.Suspended => "bg-error-container text-on-error-container",
+        ArtaniPaylas.Core.Enums.ListingStatus.Canceled => "bg-surface-container-high text-on-surface-variant",
+        ArtaniPaylas.Core.Enums.ListingStatus.Expired => "bg-surface-container-high text-on-surface-variant",
+        ArtaniPaylas.Core.Enums.ListingStatus.Completed => "bg-secondary-container/40 text-secondary",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+
+    var reportStatusClass = Model.Status switch
+    {
+        ArtaniPaylas.Core.Enums.ReportStatus.Pending => "bg-error-container text-on-error-container",
+        ArtaniPaylas.Core.Enums.ReportStatus.Resolved => "bg-tertiary-container/20 text-tertiary",
+        ArtaniPaylas.Core.Enums.ReportStatus.Reviewed => "bg-secondary-container/40 text-secondary",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+}
+
+<section class="mb-8">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+            <h1 class="text-4xl font-extrabold text-on-surface tracking-tight">İlan Raporu İnceleme</h1>
+            <p class="text-on-surface-variant mt-2 text-lg">Raporu değerlendirip ilan için moderasyon kararını buradan verebilirsiniz.</p>
+        </div>
+        <a href="/Admin/Reports" class="text-sm px-4 py-2 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface transition-colors">Raporlara Dön</a>
+    </div>
+</section>
+
+@if (listing is null)
+{
+    <section class="bg-surface-container-low p-6 rounded-xl">
+        <div class="text-on-surface-variant">Bu rapora bağlı ilan bulunamadı.</div>
+    </section>
+}
+else
+{
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <article class="bg-surface-container-low p-6 rounded-xl xl:col-span-2">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-on-surface">@listing.Title</h2>
+                    <p class="text-on-surface-variant mt-1">@listing.Location</p>
+                </div>
+                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold @listingStatusClass">@listing.Status.ToDisplayText()</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+                <div class="bg-surface-container-lowest rounded-xl p-4">
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">İlan Sahibi</div>
+                    <div class="font-semibold text-on-surface">@(listing.OwnerUser?.FullName ?? listing.OwnerUser?.UserName ?? "Kullanıcı")</div>
+                </div>
+                <div class="bg-surface-container-lowest rounded-xl p-4">
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">Yayın Tarihi</div>
+                    <div class="font-semibold text-on-surface">@listing.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                </div>
+                <div class="bg-surface-container-lowest rounded-xl p-4">
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">Son Tüketim</div>
+                    <div class="font-semibold text-on-surface">@listing.ExpirationDate.ToString("dd.MM.yyyy")</div>
+                </div>
+                <div class="bg-surface-container-lowest rounded-xl p-4">
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">İlan No</div>
+                    <div class="font-semibold text-on-surface">#@listing.Id</div>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-lowest rounded-xl p-4 text-on-surface-variant text-sm">
+                @listing.Description
+            </div>
+        </article>
+
+        <article class="bg-surface-container-low p-6 rounded-xl">
+            <h3 class="text-lg font-bold text-on-surface mb-4">Rapor Özeti</h3>
+            <div class="space-y-4 text-sm">
+                <div>
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">Rapor No</div>
+                    <div class="font-semibold text-on-surface">#@Model.Id</div>
+                </div>
+                <div>
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">Raporlayan</div>
+                    <div class="font-semibold text-on-surface">@(Model.Reporter?.FullName ?? Model.Reporter?.UserName ?? "Kullanıcı")</div>
+                    <div class="text-on-surface-variant text-xs">@(Model.Reporter?.Email ?? "-")</div>
+                </div>
+                <div>
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">Rapor Durumu</div>
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold @reportStatusClass">@Model.Status.ToDisplayText()</span>
+                </div>
+                <div>
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">Rapor Tarihi</div>
+                    <div class="font-semibold text-on-surface">@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                </div>
+                <div>
+                    <div class="text-slate-500 text-xs uppercase font-bold mb-1">Gerekçe</div>
+                    <div class="bg-surface-container-lowest rounded-xl p-3 text-on-surface-variant">@Model.Reason</div>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <article class="bg-surface-container-low p-6 rounded-xl">
+            <h3 class="text-lg font-bold text-on-surface mb-4">İlan İçin Moderasyon Kararı</h3>
+            <p class="text-on-surface-variant text-sm mb-4">Karar verdiğinizde ilan durumu güncellenir.</p>
+
+            <div class="flex flex-wrap gap-2">
+                <form action="/Admin/ModerateListing" method="post" class="inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@listing.Id" />
+                    <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ListingStatus.Suspended" />
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-error text-on-error hover:opacity-90 transition-opacity">Askıya Al</button>
+                </form>
+
+                <form action="/Admin/ModerateListing" method="post" class="inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@listing.Id" />
+                    <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ListingStatus.Active" />
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-tertiary text-on-tertiary hover:opacity-90 transition-opacity">Aktife Al</button>
+                </form>
+
+                <form action="/Admin/ModerateListing" method="post" class="inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@listing.Id" />
+                    <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ListingStatus.Canceled" />
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-surface-container-high text-on-surface hover:opacity-90 transition-opacity">İptal Et</button>
+                </form>
+            </div>
+        </article>
+
+        <article class="bg-surface-container-low p-6 rounded-xl">
+            <h3 class="text-lg font-bold text-on-surface mb-4">Rapor Durumu Kararı</h3>
+            <p class="text-on-surface-variant text-sm mb-4">İnceleme sonucu rapor statüsünü güncelleyebilirsiniz.</p>
+
+            <div class="flex flex-wrap gap-2">
+                @if (Model.Status == ArtaniPaylas.Core.Enums.ReportStatus.Pending)
+                {
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Reviewed" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-secondary text-on-secondary hover:opacity-90 transition-opacity">İncelendi</button>
+                    </form>
+
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Resolved" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-tertiary text-on-tertiary hover:opacity-90 transition-opacity">Çözüldü</button>
+                    </form>
+
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Dismissed" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-error text-on-error hover:opacity-90 transition-opacity">Reddet</button>
+                    </form>
+                }
+
+                @if (Model.Status == ArtaniPaylas.Core.Enums.ReportStatus.Reviewed)
+                {
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Resolved" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-tertiary text-on-tertiary hover:opacity-90 transition-opacity">Çözüldü</button>
+                    </form>
+
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Dismissed" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-error text-on-error hover:opacity-90 transition-opacity">Reddet</button>
+                    </form>
+
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Pending" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-surface-container-high text-on-surface hover:opacity-90 transition-opacity">Beklemeye Al</button>
+                    </form>
+                }
+
+                @if (Model.Status == ArtaniPaylas.Core.Enums.ReportStatus.Resolved)
+                {
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Dismissed" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-error text-on-error hover:opacity-90 transition-opacity">Çözümü Reddet</button>
+                    </form>
+
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Pending" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-surface-container-high text-on-surface hover:opacity-90 transition-opacity">Beklemeye Al</button>
+                    </form>
+                }
+
+                @if (Model.Status == ArtaniPaylas.Core.Enums.ReportStatus.Dismissed)
+                {
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Reviewed" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-secondary text-on-secondary hover:opacity-90 transition-opacity">İncelemeye Al</button>
+                    </form>
+
+                    <form action="/Admin/UpdateReportStatus" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="expectedCurrentStatus" value="@Model.Status" />
+                        <input type="hidden" name="status" value="@ArtaniPaylas.Core.Enums.ReportStatus.Pending" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="px-3 py-2 rounded-lg text-xs font-bold bg-surface-container-high text-on-surface hover:opacity-90 transition-opacity">Beklemeye Al</button>
+                    </form>
+                }
+            </div>
+        </article>
+    </section>
+}
