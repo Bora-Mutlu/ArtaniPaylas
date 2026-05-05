@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Enums;
 using ArtaniPaylas.Core.Interfaces;
@@ -20,15 +20,18 @@ public class ListingsController : Controller
 
     private readonly ApplicationDbContext _context;
     private readonly IListingStatusService _listingStatusService;
+    private readonly INotificationService _notificationService;
     private readonly IWebHostEnvironment _environment;
 
     public ListingsController(
         ApplicationDbContext context,
         IListingStatusService listingStatusService,
+        INotificationService notificationService,
         IWebHostEnvironment environment)
     {
         _context = context;
         _listingStatusService = listingStatusService;
+        _notificationService = notificationService;
         _environment = environment;
     }
 
@@ -101,15 +104,23 @@ public class ListingsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ListingCreateEditViewModel model)
     {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
         var userId = GetCurrentUserId();
         if (userId is null)
         {
             return Challenge();
+        }
+
+        // Email verification check
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null || !user.EmailConfirmedAt.HasValue)
+        {
+            ModelState.AddModelError(string.Empty, "İlan oluşturmak için lütfen e-posta adresinizi doğrulayın.");
+            return View(model);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
         }
 
         var listing = new Listing
@@ -134,6 +145,7 @@ public class ListingsController : Controller
 
         _context.Listings.Add(listing);
         await _context.SaveChangesAsync();
+        await NotifySubscribersForNewListingAsync(listing, userId);
 
         TempData["SuccessMessage"] = "İlan oluşturuldu.";
         return RedirectToAction(nameof(MyListings));
@@ -427,4 +439,32 @@ public class ListingsController : Controller
             ? dateOnly
             : DateTime.SpecifyKind(dateOnly, DateTimeKind.Utc);
     }
+
+    private async Task NotifySubscribersForNewListingAsync(Listing listing, string ownerUserId)
+    {
+        var subscribers = await _context.Users
+            .AsNoTracking()
+            .Where(x => x.NotifyOnNewListingsByEmail && x.EmailConfirmedAt.HasValue && x.Id != ownerUserId)
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        if (subscribers.Count == 0)
+        {
+            return;
+        }
+
+        var message = $"Yeni ilan eklendi: {listing.Title} - {listing.Location}";
+        foreach (var subscriberId in subscribers)
+        {
+            await _notificationService.CreateNotificationAsync(
+                subscriberId,
+                "Sisteme Yeni İlan Eklendi",
+                message,
+                NotificationType.NewListingPublished,
+                listing.Id,
+                "Listing");
+        }
+    }
 }
+
+

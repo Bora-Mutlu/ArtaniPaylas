@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ArtaniPaylas.Core.Entities;
@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using ArtaniPaylas.Web.Services;
 
 namespace ArtaniPaylas.Web.Controllers;
 
@@ -16,11 +17,19 @@ public class AdminController : Controller
 {
     private readonly ArtaniPaylas.Data.ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ArtaniPaylas.Core.Interfaces.INotificationService _notificationService;
+    private readonly ArtaniPaylas.Core.Interfaces.IEmailService _emailService;
 
-    public AdminController(ArtaniPaylas.Data.ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+    public AdminController(
+        ArtaniPaylas.Data.ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        ArtaniPaylas.Core.Interfaces.INotificationService notificationService,
+        ArtaniPaylas.Core.Interfaces.IEmailService emailService)
     {
         _context = context;
         _userManager = userManager;
+        _notificationService = notificationService;
+        _emailService = emailService;
     }
 
     public async Task<IActionResult> Index()
@@ -227,6 +236,62 @@ public class AdminController : Controller
         return View();
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApplyReviewDecision(
+        int reportId,
+        ListingStatus listingStatus,
+        ReportStatus reportStatus,
+        string? adminNote,
+        string? returnUrl = null)
+    {
+        var report = await _context.Reports
+            .Include(x => x.Reporter)
+            .Include(x => x.ReportedListing)
+            .ThenInclude(x => x!.OwnerUser)
+            .FirstOrDefaultAsync(x => x.Id == reportId);
+
+        if (report is null)
+        {
+            TempData["ErrorMessage"] = "Rapor bulunamadı.";
+            return RedirectToAction(nameof(Reports));
+        }
+
+        if (!IsValidReportStatusTransition(report.Status, reportStatus) && report.Status != reportStatus)
+        {
+            TempData["ErrorMessage"] = $"{report.Status.ToDisplayText()} durumundaki rapor {reportStatus.ToDisplayText()} durumuna geçirilemez.";
+            return RedirectToAction(nameof(ListingReportReview), new { reportId });
+        }
+
+        if (reportStatus == ReportStatus.Dismissed && string.IsNullOrWhiteSpace(adminNote))
+        {
+            TempData["ErrorMessage"] = "Rapor reddi için açıklama zorunludur.";
+            return RedirectToAction(nameof(ListingReportReview), new { reportId });
+        }
+
+        var listing = report.ReportedListing;
+        var oldListingStatus = listing?.Status;
+
+        report.Status = reportStatus;
+        if (listing is not null)
+        {
+            listing.Status = listingStatus;
+        }
+
+        await _context.SaveChangesAsync();
+
+        await NotifyReporterForDecisionAsync(report, reportStatus, adminNote);
+        await NotifyListingOwnerForListingActionAsync(report, oldListingStatus, listingStatus, adminNote);
+
+        TempData["SuccessMessage"] = "Karar kaydedildi ve bilgilendirmeler gönderildi.";
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        return RedirectToAction(nameof(Reports));
+    }
+
     private static bool IsValidReportStatusTransition(ReportStatus currentStatus, ReportStatus targetStatus)
     {
         return currentStatus switch
@@ -239,9 +304,87 @@ public class AdminController : Controller
         };
     }
 
+    private async Task NotifyReporterForDecisionAsync(Report report, ReportStatus reportStatus, string? adminNote)
+    {
+        if (report.Reporter is null || string.IsNullOrWhiteSpace(report.Reporter.Email))
+        {
+            return;
+        }
+
+        var safeNote = string.IsNullOrWhiteSpace(adminNote) ? "Ek açıklama paylaşılmadı." : adminNote.Trim();
+
+        if (reportStatus == ReportStatus.Dismissed)
+        {
+            var title = "Raporunuz Reddedildi";
+            var message = $"Raporunuz incelendi ve reddedildi. Gerekçe: {safeNote}";
+
+            await _notificationService.CreateNotificationAsync(
+                report.ReporterId,
+                title,
+                message,
+                NotificationType.SystemNotification,
+                report.Id,
+                "Report");
+
+            var emailBody = EmailTemplateBuilder.BuildActionEmailTemplate(
+                title,
+                "Rapor Değerlendirmesi",
+                report.Reporter.FullName ?? report.Reporter.UserName ?? "Kullanıcı",
+                message);
+
+            await _emailService.SendEmailAsync(report.Reporter.Email, $"ArtaniPaylas - {title}", emailBody);
+        }
+    }
+
+    private async Task NotifyListingOwnerForListingActionAsync(Report report, ListingStatus? oldStatus, ListingStatus newStatus, string? adminNote)
+    {
+        var listing = report.ReportedListing;
+        var owner = listing?.OwnerUser;
+        if (listing is null || owner is null || string.IsNullOrWhiteSpace(owner.Email))
+        {
+            return;
+        }
+
+        if (oldStatus == newStatus)
+        {
+            return;
+        }
+
+        if (newStatus != ListingStatus.Canceled && newStatus != ListingStatus.Suspended)
+        {
+            return;
+        }
+
+        var detailLink = Url.Action("Details", "Listings", new { id = listing.Id }, Request.Scheme) ?? string.Empty;
+        var title = "Ilaniniz Moderasyon Nedeniyle Kaldirildi";
+        var safeNote = string.IsNullOrWhiteSpace(adminNote) ? "Moderasyon politikası gereği işlem yapıldı." : adminNote.Trim();
+        var message = $"'{listing.Title}' ilanınız {newStatus.ToDisplayText()} durumuna alındı. Detay: {safeNote}";
+
+        await _notificationService.CreateNotificationAsync(
+            owner.Id,
+            title,
+            message,
+            NotificationType.SystemNotification,
+            listing.Id,
+            "Listing");
+
+        var emailBody = EmailTemplateBuilder.BuildActionEmailTemplate(
+            title,
+            "İlan Moderasyon Güncellemesi",
+            owner.FullName ?? owner.UserName ?? "Kullanıcı",
+            message,
+            detailLink,
+            "İlan Detayını Aç");
+
+        await _emailService.SendEmailAsync(owner.Email, $"ArtaniPaylas - {title}", emailBody);
+    }
+
     private sealed class ActivityItem
     {
         public DateTime CreatedAt { get; set; }
         public string Text { get; set; } = string.Empty;
     }
 }
+
+
+

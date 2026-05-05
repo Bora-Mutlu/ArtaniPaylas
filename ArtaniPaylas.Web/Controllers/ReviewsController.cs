@@ -1,6 +1,7 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Enums;
+using ArtaniPaylas.Core.Interfaces;
 using ArtaniPaylas.Core.ViewModels;
 using ArtaniPaylas.Data;
 
@@ -15,10 +16,12 @@ namespace ArtaniPaylas.Web.Controllers;
 public class ReviewsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public ReviewsController(ApplicationDbContext context)
+    public ReviewsController(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<IActionResult> Create(int requestId)
@@ -133,6 +136,15 @@ public class ReviewsController : Controller
         targetUser.TrustScore = Math.Round(averageScore, 2);
         await _context.SaveChangesAsync();
 
+        // Bildirim: Yorum alınan kişiye
+        await _notificationService.CreateNotificationAsync(
+            targetUser.Id,
+            "Yorum Alındı!",
+            $"Bir kullanıcı sizin hakkında {model.Rating} yıldız yorum bıraktı.",
+            Core.Enums.NotificationType.ReviewReceived,
+            review.Id,
+            "Review");
+
         TempData["SuccessMessage"] = "Değerlendirmen kaydedildi.";
         return RedirectToAction("History", "Profile");
     }
@@ -157,3 +169,4 @@ public class ReviewsController : Controller
         return User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 }
+

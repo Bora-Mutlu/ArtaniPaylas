@@ -3,6 +3,7 @@ using ArtaniPaylas.Core.Interfaces;
 using ArtaniPaylas.Data;
 using ArtaniPaylas.Data.Services;
 using ArtaniPaylas.Web.Middleware;
+using ArtaniPaylas.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -105,6 +106,9 @@ builder.Services.AddRateLimiter(options =>
 });
 
 builder.Services.AddScoped<IListingStatusService, ListingStatusService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ITrustedUserService, TrustedUserService>();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
@@ -124,6 +128,11 @@ else
 
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.ExecuteSqlRawAsync(
+        @"ALTER TABLE ""AspNetUsers""
+          ADD COLUMN IF NOT EXISTS ""NotifyOnNewListingsByEmail"" boolean NOT NULL DEFAULT FALSE;");
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
@@ -146,7 +155,7 @@ using (var scope = app.Services.CreateScope())
             UserName = adminEmail,
             Email = adminEmail,
             EmailConfirmed = true,
-            FullName = "Sistem Yöneticisi",
+            FullName = "Sistem Yï¿½neticisi",
             IsActive = true
         };
         var result = await userManager.CreateAsync(adminUser, "Admin123!");

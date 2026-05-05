@@ -1,4 +1,4 @@
-@model IReadOnlyCollection<Request>
+﻿@model IReadOnlyCollection<Request>
 @{
     ViewData["Title"] = "Gelen Talepler";
     Layout = "_UserLayout";
@@ -75,7 +75,16 @@ else
 
                     <tr class="ap-clickable-row ap-request-row" data-target-row="@collapseId" aria-expanded="false" style="cursor: pointer;" role="button" tabindex="0">
                         <td>@item.Listing?.Title</td>
-                        <td>@(item.RequesterUser?.FullName ?? item.RequesterUser?.UserName)</td>
+                        <td>
+                            @(item.RequesterUser?.FullName ?? item.RequesterUser?.UserName)
+                            @if (item.RequesterUser != null)
+                            {
+                                <div class="mt-1">
+                                    <partial name="Badges/_VerifiedEmailBadge" model="item.RequesterUser" />
+                                    <partial name="Badges/_TrustedUserBadge" model="item.RequesterUser" />
+                                </div>
+                            }
+                        </td>
                         <td><span class="@statusClass">@item.Status.ToDisplayText()</span></td>
                         <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                         <td class="text-end" onclick="event.stopPropagation();">
@@ -151,4 +160,5 @@ else
         });
     </script>
 }
+
 

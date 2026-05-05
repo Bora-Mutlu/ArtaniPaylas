@@ -1,4 +1,4 @@
-@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+﻿@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
 @{
     var path = Context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
     var isDashboard = path == "/userdashboard" || path == "/userdashboard/index";
@@ -10,6 +10,10 @@
     var isProfile = path.StartsWith("/profile");
 
     var currentUser = await UserManager.GetUserAsync(User);
+    var isEmailVerified = currentUser?.EmailConfirmedAt.HasValue == true;
+    var showEmailVerificationNotice = currentUser is not null && !isEmailVerified;
+    var currentUserId = currentUser?.Id ?? string.Empty;
+    var currentUserEmail = currentUser?.Email ?? string.Empty;
 
     var displayName = currentUser?.FullName ?? currentUser?.UserName ?? User?.Identity?.Name;
     if (string.IsNullOrWhiteSpace(displayName))
@@ -17,9 +21,10 @@
         displayName = "Bireysel Kullanıcı";
     }
 
-    var profileImageUrl = !string.IsNullOrWhiteSpace(currentUser?.ProfileImageUrl)
-        ? currentUser.ProfileImageUrl!
-        : "https://lh3.googleusercontent.com/aida-public/AB6AXuDfFYA9gqNQ3ZrtJFLoPyXzjfQnbrhbt9CAI7cQ52wfrK3RUBlAofj0jCistzWRsH0Z3Jxg8fzO34P43d9eaqtQA1zNcFf1-oPlSqLLcYJdhkfyAq6WQ62NfhaYRS-xSRJ5xahrdnLGRO2JMxzcOsCxT8PePvvEtMiJAfOln5L1zX_9fZDgvMGrv9own00LCO6MuclXsTA4lc8q4H1LT0AxnOY-C7b_SvCZgV7_UIMgCiOwjJO5c-ABdls-IvfSttloiZgkOJC4mGQ";
+    var profileImageUrl = string.IsNullOrWhiteSpace(currentUser?.ProfileImageUrl)
+        ? null
+        : currentUser.ProfileImageUrl;
+    var profileInitial = !string.IsNullOrWhiteSpace(displayName) ? displayName.Trim()[0].ToString().ToUpperInvariant() : "U";
 
     var activeNavClass = "flex items-center gap-3 px-4 py-3 text-[#003d9b] font-bold bg-[#ffffff] rounded-xl transition-all duration-300";
     var passiveNavClass = "flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 rounded-xl hover:pl-6 transition-all duration-300";
@@ -36,6 +41,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/user-panel.css" asp-append-version="true" />
 
     <script>
       tailwind.config = {
@@ -185,25 +191,59 @@
                     <div class="hidden md:flex gap-6 mr-6">
                         <a class="text-[#003d9b] border-b-2 border-[#003d9b] pb-1 text-sm font-medium" href="/UserDashboard">Panel</a>
                         <a class="text-slate-500 hover:text-[#0052cc] transition-colors text-sm" href="/Requests/Outgoing">Talepler</a>
-                        <a class="text-slate-500 hover:text-[#0052cc] transition-colors text-sm" href="/Profile">Profil</a>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <a href="/Requests/Incoming" class="p-2 text-slate-500 hover:bg-surface-container rounded-full transition-colors">
-                            <span class="material-symbols-outlined">notifications</span>
-                        </a>
+                        <div class="position-relative notification-icon">
+                            <button type="button" onclick="toggleNotificationDropdown()" class="p-2 text-slate-500 hover:bg-surface-container rounded-full transition-colors border-0 bg-transparent">
+                                <span class="material-symbols-outlined">notifications</span>
+                            </button>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style="display:none;">0</span>
+                            @if (showEmailVerificationNotice)
+                            {
+                                <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-warning text-dark">!</span>
+                            }
+
+                            <div class="notification-dropdown position-absolute end-0 mt-2 bg-white border rounded shadow-sm p-2" style="display:none; width: 360px; max-height: 420px; overflow-y:auto; z-index:1100;">
+                                <div class="d-flex align-items-center justify-content-between px-2 py-1 border-bottom mb-2">
+                                    <strong class="small">Bildirimler</strong>
+                                    <a href="/Requests/Incoming" class="small text-decoration-none">Talepler</a>
+                                </div>
+                                <div id="notificationList" class="d-flex flex-column gap-1"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="h-8 w-[1px] bg-outline-variant/30 mx-2"></div>
                     <a href="/Listings/Create" class="bg-primary hover:bg-primary-container text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 shadow-sm">
                         Yeni İlan
                     </a>
-                    <div class="ml-2 flex items-center gap-3">
-                        <div class="text-right hidden sm:block">
-                            <p class="text-xs font-bold text-on-surface">@displayName</p>
-                            <p class="text-[10px] text-slate-500">Bireysel Kullanıcı</p>
-                        </div>
-                        <img alt="Kullanıcı Avatar" class="h-9 w-9 rounded-full object-cover ring-2 ring-primary-container/20" src="@profileImageUrl" />
+                    <div class="dropdown ms-2">
+                        <button class="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="text-right d-none d-sm-block">
+                                <p class="text-xs font-bold text-on-surface mb-0">@displayName</p>
+                                <p class="text-[10px] text-slate-500 mb-0">Bireysel Kullanıcı</p>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(profileImageUrl))
+                            {
+                                <img alt="Kullanıcı Avatar" class="h-9 w-9 rounded-full object-cover ring-2 ring-primary-container/20" src="@profileImageUrl" />
+                            }
+                            else
+                            {
+                                <div class="h-9 w-9 rounded-full bg-primary-container text-on-primary d-flex align-items-center justify-content-center fw-bold ring-2 ring-primary-container/20">@profileInitial</div>
+                            }
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+                            <li><a class="dropdown-item" href="/Profile">Profilim</a></li>
+                            <li><a class="dropdown-item" href="/Profile/Edit">Profili Düzenle</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="/Account/Logout" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger">Çıkış Yap</button>
+                                </form>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </header>
@@ -218,10 +258,51 @@
                     <div class="mb-6 rounded-xl bg-error-container text-on-error-container px-4 py-3">@errorMessage</div>
                 }
 
+                @if (showEmailVerificationNotice)
+                {
+                    <div class="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2">
+                            <div>
+                                <div class="fw-semibold">Bildirim: E-posta adresini doğrulaman gerekiyor.</div>
+                                <small>Doğrulama yapmadan bazı işlemler kısıtlı kalır.</small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#emailVerificationModal">
+                                Mailini Doğrula
+                            </button>
+                        </div>
+                    </div>
+                }
+
                 @RenderBody()
             </div>
         </main>
     </div>
+
+    @if (showEmailVerificationNotice)
+    {
+        <div class="modal fade" id="emailVerificationModal" tabindex="-1" aria-labelledby="emailVerificationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="emailVerificationModalLabel">E-posta Doğrulama</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2"><strong>@currentUserEmail</strong> adresine doğrulama e-postası gönderebilirsin.</p>
+                        <p class="mb-3 text-muted">E-posta gelmezse Spam/Junk klasörünü kontrol etmeyi unutma.</p>
+
+                        <form id="emailVerificationResendForm" asp-controller="Account" asp-action="ResendConfirmationEmail" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="email" value="@currentUserEmail" />
+                            <button id="resendVerificationBtn" type="submit" class="btn btn-primary w-100">Doğrulama Maili Gönder</button>
+                        </form>
+
+                        <small id="resendCooldownText" class="d-block mt-2 text-muted"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest glass-nav border-t border-outline-variant/10 px-6 py-3 flex justify-between items-center z-50">
         <a class="flex flex-col items-center gap-1 @(isDashboard ? "text-primary" : "text-slate-400")" href="/UserDashboard">
@@ -249,6 +330,72 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/notifications.js" asp-append-version="true"></script>
+    @if (showEmailVerificationNotice)
+    {
+        <script>
+            (function () {
+                const resendForm = document.getElementById("emailVerificationResendForm");
+                const resendButton = document.getElementById("resendVerificationBtn");
+                const cooldownText = document.getElementById("resendCooldownText");
+                const userId = "@currentUserId";
+                const cooldownSeconds = 60;
+                const storageKey = "email-verify-resend-cooldown-" + userId;
+
+                if (!resendForm || !resendButton || !cooldownText || !userId) {
+                    return;
+                }
+
+                function getRemainingSeconds() {
+                    const rawValue = localStorage.getItem(storageKey);
+                    if (!rawValue) {
+                        return 0;
+                    }
+
+                    const expiresAt = parseInt(rawValue, 10);
+                    if (isNaN(expiresAt)) {
+                        localStorage.removeItem(storageKey);
+                        return 0;
+                    }
+
+                    const now = Date.now();
+                    const remaining = Math.ceil((expiresAt - now) / 1000);
+                    return remaining > 0 ? remaining : 0;
+                }
+
+                function updateCooldownUi() {
+                    const remaining = getRemainingSeconds();
+
+                    if (remaining > 0) {
+                        resendButton.disabled = true;
+                        resendButton.textContent = "Tekrar Gönder (" + remaining + " sn)";
+                        cooldownText.textContent = "60 saniye dolunca tekrar gönder butonu aktif olur.";
+                    } else {
+                        resendButton.disabled = false;
+                        resendButton.textContent = "Doğrulama Maili Gönder";
+                        cooldownText.textContent = "E-posta gelmezse 60 saniye sonra tekrar gönderebilirsin. Spam/Junk klasörünü kontrol et.";
+                    }
+                }
+
+                resendForm.addEventListener("submit", function (event) {
+                    const remaining = getRemainingSeconds();
+                    if (remaining > 0) {
+                        event.preventDefault();
+                        updateCooldownUi();
+                        return;
+                    }
+
+                    const expiresAt = Date.now() + (cooldownSeconds * 1000);
+                    localStorage.setItem(storageKey, String(expiresAt));
+                    updateCooldownUi();
+                });
+
+                updateCooldownUi();
+                setInterval(updateCooldownUi, 1000);
+            })();
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+

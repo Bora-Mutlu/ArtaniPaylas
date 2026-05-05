@@ -1,4 +1,4 @@
-@model ListingsIndexViewModel
+﻿@model ListingsIndexViewModel
 @using System.Security.Claims
 @{
     ViewData["Title"] = "İlanlar";
@@ -105,6 +105,13 @@
                             <small class="text-muted">Son Tarih: @listing.ExpirationDate.ToString("dd.MM.yyyy")</small>
                             <div class="mt-2">
                                 <small class="text-muted">İlan Sahibi: @(listing.OwnerUser?.FullName ?? listing.OwnerUser?.UserName ?? "Kullanıcı")</small>
+                                @if (listing.OwnerUser != null)
+                                {
+                                    <div class="mt-1">
+                                        <partial name="Badges/_VerifiedEmailBadge" model="listing.OwnerUser" />
+                                        <partial name="Badges/_TrustedUserBadge" model="listing.OwnerUser" />
+                                    </div>
+                                }
                             </div>
                         </div>
 
@@ -423,3 +430,5 @@ else
         </div>
     }
 }
+
+

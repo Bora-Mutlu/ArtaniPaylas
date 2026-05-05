@@ -1,0 +1,56 @@
+﻿@model dynamic
+
+@{
+    ViewData["Title"] = "E-posta Doğrulandı";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div style="display: inline-block; background-color: #d4edda; border-radius: 50%; padding: 20px;">
+                            <i class="bi bi-check-circle" style="color: #28a745; font-size: 3rem;"></i>
+                        </div>
+                    </div>
+
+                    <h2 class="card-title mb-3">E-posta Doğrulandı!</h2>
+                    
+                    <p class="text-muted mb-4">
+                        Tebrikler! E-posta adresiniz <strong>@Model.Email</strong> başarıyla doğrulanmıştır.
+                    </p>
+
+                    <div class="alert alert-success mb-4" role="alert">
+                        <p class="mb-0">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Hesabınız aktif!</strong> Artık ArtaniPaylas'ı tam olarak kullanabilirsiniz.
+                        </p>
+                    </div>
+
+                    <p class="text-muted mb-4">
+                        Artık:
+                    </p>
+                    <ul class="list-unstyled text-start d-inline-block mb-4">
+                        <li><i class="bi bi-check text-success me-2"></i> Ürün paylaşabilir</li>
+                        <li><i class="bi bi-check text-success me-2"></i> İstek gönderebilir</li>
+                        <li><i class="bi bi-check text-success me-2"></i> Yorum yazabilir</li>
+                        <li><i class="bi bi-check text-success me-2"></i> Profil düzenleyebilir</li>
+                    </ul>
+
+                    <hr />
+
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-success btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> Giriş Yap
+                    </a>
+
+                    <p class="text-muted mt-4 mb-0">
+                        <a href="@Url.Action("Index", "Home")">Ana Sayfaya Dön</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -33,7 +33,24 @@
             <div class="d-flex flex-column gap-2 text-slate-700">
                 <div><strong>Son Tüketim:</strong> @Model.ExpirationDate.ToString("dd.MM.yyyy")</div>
                 <div><strong>Durum:</strong> <span class="@statusClass">@Model.Status.ToDisplayText()</span></div>
-                <div><strong>İlan Sahibi:</strong> @(Model.OwnerUser?.FullName ?? Model.OwnerUser?.UserName ?? "Kullanıcı")</div>
+                <div>
+                    <strong>İlan Sahibi:</strong>
+                    @(Model.OwnerUser?.FullName ?? Model.OwnerUser?.UserName ?? "Kullanıcı")
+                    @if (Model.OwnerUser != null)
+                    {
+                        <partial name="Badges/_VerifiedEmailBadge" model="Model.OwnerUser" />
+                        <partial name="Badges/_TrustedUserBadge" model="Model.OwnerUser" />
+                    }
+                </div>
+                @if (Model.OwnerUser?.TrustScore > 0)
+                {
+                    <div class="text-muted">
+                        <strong>Puan:</strong> 
+                        <span style="color: #006948; font-weight: 600;">
+                            ⭐ @Model.OwnerUser.TrustScore.ToString("F1")/5.0
+                        </span>
+                    </div>
+                }
             </div>
 
             <div class="mt-4">

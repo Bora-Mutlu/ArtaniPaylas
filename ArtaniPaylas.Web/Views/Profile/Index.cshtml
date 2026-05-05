@@ -1,4 +1,4 @@
-@model ProfileIndexViewModel
+﻿@model ProfileIndexViewModel
 @{
     ViewData["Title"] = "Profil";
     Layout = "_UserLayout";
@@ -56,10 +56,26 @@
                 <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
                     Topluluk Profili
                 </span>
+
                 <h2 class="mt-3 text-2xl sm:text-3xl font-black text-slate-900 break-words">@displayName</h2>
-                <p class="mt-2 text-slate-600">Profil kartın ve işlem özetlerin burada. Bilgilerini güncel tutarak daha hızlı eşleşme alabilirsin.</p>
+                <div class="mt-2 flex gap-2 flex-wrap">
+                    <partial name="Badges/_VerifiedEmailBadge" model="Model.User" />
+                    <partial name="Badges/_TrustedUserBadge" model="Model.User" />
+                </div>
+
+                <p class="mt-3 text-slate-600">Profil kartın ve işlem özetlerin burada. Bilgilerini güncel tutarak daha hızlı eşleşme alabilirsin.</p>
 
                 <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Puan</p>
+                        <p class="mt-1 text-sm font-bold text-emerald-700">­ @Model.User.TrustScore.ToString("F1")/5.0</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">E-posta Doğrulaması</p>
+                        <p class="mt-1 text-sm font-bold" style="color: @(Model.User.EmailConfirmedAt.HasValue ? "#28a745" : "#dc3545");">
+                            @(Model.User.EmailConfirmedAt.HasValue ? "✓ Doğrulandı" : "š  Doğrulanmamış")
+                        </p>
+                    </div>
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
                         <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">E-posta</p>
                         <p class="mt-1 text-sm font-bold text-slate-900 break-words">@Model.User.Email</p>
@@ -226,4 +242,5 @@
         }
     </div>
 </div>
+
 

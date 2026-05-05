@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Enums;
 using ArtaniPaylas.Core.Extensions;
@@ -7,6 +7,7 @@ using ArtaniPaylas.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ArtaniPaylas.Core.Interfaces;
 
 namespace ArtaniPaylas.Web.Controllers;
 
@@ -14,10 +15,12 @@ namespace ArtaniPaylas.Web.Controllers;
 public class UserDashboardController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public UserDashboardController(ApplicationDbContext context)
+    public UserDashboardController(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<IActionResult> Index()
@@ -35,7 +38,8 @@ public class UserDashboardController : Controller
             {
                 x.FullName,
                 x.UserName,
-                x.ProfileImageUrl
+                x.ProfileImageUrl,
+                x.NotifyOnNewListingsByEmail
             })
             .FirstOrDefaultAsync();
 
@@ -130,6 +134,7 @@ public class UserDashboardController : Controller
             IncomingRequestsCount = incomingRequestsCount,
             PendingIncomingRequestsCount = pendingIncomingRequestsCount,
             OutgoingSuccessRate = outgoingSuccessRate,
+            NotifyOnNewListingsByEmail = userInfo?.NotifyOnNewListingsByEmail == true,
             RecentListings = recentListings,
             PendingIncomingRequests = pendingItems
         };
@@ -196,5 +201,83 @@ public class UserDashboardController : Controller
         }
 
         return string.Concat(char.ToUpperInvariant(parts[0][0]), char.ToUpperInvariant(parts[1][0]));
+
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> MarkNotificationAsRead([FromBody] MarkNotificationReadRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        if (request?.NotificationId is null || request.NotificationId <= 0)
+        {
+            return BadRequest();
+        }
+
+        await _notificationService.MarkAsReadAsync(request.NotificationId.Value);
+        return Ok();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUnreadNotificationCount()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var unreadCount = await _notificationService.GetUnreadCountAsync(userId);
+        return Json(new { unreadCount });
+
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetLatestNotifications(int limit = 10)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var items = await _notificationService.GetUserNotificationsAsync(userId, limit);
+        return Json(items);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateNewListingEmailPreference(bool enabled)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Challenge();
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        user.NotifyOnNewListingsByEmail = enabled;
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = enabled
+            ? "Yeni ilan e-posta bildirimleri açıldı."
+            : "Yeni ilan e-posta bildirimleri kapatıldı.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    public sealed class MarkNotificationReadRequest
+    {
+        public int? NotificationId { get; set; }
     }
 }
+

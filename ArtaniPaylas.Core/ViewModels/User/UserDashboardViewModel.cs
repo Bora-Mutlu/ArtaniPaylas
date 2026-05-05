@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace ArtaniPaylas.Core.ViewModels;
@@ -13,6 +13,7 @@ public class UserDashboardViewModel
     public int IncomingRequestsCount { get; set; }
     public int PendingIncomingRequestsCount { get; set; }
     public double OutgoingSuccessRate { get; set; }
+    public bool NotifyOnNewListingsByEmail { get; set; }
 
     public IReadOnlyCollection<UserDashboardListingItemViewModel> RecentListings { get; set; }
         = Array.Empty<UserDashboardListingItemViewModel>();
@@ -40,3 +41,4 @@ public class UserDashboardPendingRequestItemViewModel
     public string ListingTitle { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }
+

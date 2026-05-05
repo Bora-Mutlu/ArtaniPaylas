@@ -1,4 +1,4 @@
-@{
+﻿@{
     var path = Context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
     var isDashboard = path == "/admin" || path == "/admin/index";
     var isUsers = path.StartsWith("/admin/users");
@@ -25,6 +25,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/admin-panel.css" asp-append-version="true" />
 
     <script>
         tailwind.config = {
@@ -196,3 +197,5 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+
+

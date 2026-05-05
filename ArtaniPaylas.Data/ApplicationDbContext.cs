@@ -19,6 +19,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Report> Reports => Set<Report>();
 
+    public DbSet<Notification> Notifications => Set<Notification>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -80,6 +82,18 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(x => x.ReportedListingId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Notification>(entity =>
+        {
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.IsRead);
+            entity.HasIndex(x => x.CreatedAt);
         });
     }
 }

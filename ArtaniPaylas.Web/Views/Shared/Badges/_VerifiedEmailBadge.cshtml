@@ -1,0 +1,17 @@
+﻿@model ArtaniPaylas.Core.Entities.ApplicationUser
+
+@if (Model?.EmailConfirmedAt.HasValue == true)
+{
+    <span class="verified-email-badge" title="E-posta adresi doğrulanmış">
+        <i class="bi bi-check-circle"></i>
+        Doğrulandı
+    </span>
+}
+else
+{
+    <span class="verified-email-badge" style="background-color: #ffe6e6; color: #cc0000;" title="E-posta adresi henüz doğrulanmamış">
+        <i class="bi bi-exclamation-circle"></i>
+        Doğrulanmamış
+    </span>
+}
+

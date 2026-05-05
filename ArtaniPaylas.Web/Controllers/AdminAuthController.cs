@@ -1,4 +1,4 @@
-using ArtaniPaylas.Core.Entities;
+﻿using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -58,3 +58,4 @@ public class AdminAuthController : Controller
         return View("~/Views/Admin/AdminLogin.cshtml", model);
     }
 }
+

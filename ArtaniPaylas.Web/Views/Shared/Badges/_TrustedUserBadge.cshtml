@@ -1,0 +1,10 @@
+﻿@model ArtaniPaylas.Core.Entities.ApplicationUser
+
+@if (Model?.IsTrusted == true)
+{
+    <span class="trusted-badge" title="Bu kullanıcı doğrulanmış e-posta ve minimum 4.0 puanı karşıladığı için güvenilir olarak işaretlendi">
+        <i class="bi bi-star-fill"></i>
+        Güvenilir
+    </span>
+}
+

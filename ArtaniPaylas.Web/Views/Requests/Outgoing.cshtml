@@ -1,4 +1,4 @@
-@model IReadOnlyCollection<Request>
+﻿@model IReadOnlyCollection<Request>
 @{
     ViewData["Title"] = "Giden Talepler";
     Layout = "_UserLayout";
@@ -77,7 +77,16 @@ else
                             <div class="fw-semibold">@item.Listing?.Title</div>
                             <small class="text-muted">İlan No: @item.ListingId</small>
                         </td>
-                        <td>@(item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName)</td>
+                        <td>
+                            @(item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName)
+                            @if (item.Listing?.OwnerUser != null)
+                            {
+                                <div class="mt-1">
+                                    <partial name="Badges/_VerifiedEmailBadge" model="item.Listing.OwnerUser" />
+                                    <partial name="Badges/_TrustedUserBadge" model="item.Listing.OwnerUser" />
+                                </div>
+                            }
+                        </td>
                         <td><span class="@statusClass">@item.Status.ToDisplayText()</span></td>
                         <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                         <td>
@@ -97,4 +106,5 @@ else
         </div>
     </div>
 }
+
 

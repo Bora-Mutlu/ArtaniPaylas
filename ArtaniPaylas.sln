@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtaniPaylas.Data", "Artani
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtaniPaylas.Web", "ArtaniPaylas.Web\ArtaniPaylas.Web.csproj", "{3BD7AF9F-9653-4C4A-B35C-1DC1AF402C6F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtaniPaylas.Tests", "ArtaniPaylas.Tests\ArtaniPaylas.Tests.csproj", "{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{3BD7AF9F-9653-4C4A-B35C-1DC1AF402C6F}.Release|x64.Build.0 = Release|Any CPU
 		{3BD7AF9F-9653-4C4A-B35C-1DC1AF402C6F}.Release|x86.ActiveCfg = Release|Any CPU
 		{3BD7AF9F-9653-4C4A-B35C-1DC1AF402C6F}.Release|x86.Build.0 = Release|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Debug|x64.Build.0 = Debug|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Debug|x86.Build.0 = Debug|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Release|x64.ActiveCfg = Release|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Release|x64.Build.0 = Release|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Release|x86.ActiveCfg = Release|Any CPU
+		{CE9F99B5-D826-495E-A5FF-4A2E2CD972A7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

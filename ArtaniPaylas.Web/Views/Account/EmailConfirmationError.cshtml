@@ -1,0 +1,51 @@
+﻿@model string
+
+@{
+    ViewData["Title"] = "E-posta Doğrulama Hatası";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div style="display: inline-block; background-color: #f8d7da; border-radius: 50%; padding: 20px;">
+                            <i class="bi bi-exclamation-circle" style="color: #dc3545; font-size: 3rem;"></i>
+                        </div>
+                    </div>
+
+                    <h2 class="card-title mb-3">Doğrulama Hatası</h2>
+                    
+                    <div class="alert alert-danger mb-4" role="alert">
+                        <p class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            @Model
+                        </p>
+                    </div>
+
+                    <p class="text-muted mb-4">
+                        Doğrulama sırasında bir sorun oluştu. Lütfen aşağıdaki seçeneklerden birini deneyin:
+                    </p>
+
+                    <div class="d-grid gap-3 mb-4">
+                        <a href="@Url.Action("Register", "Account")" class="btn btn-primary">
+                            <i class="bi bi-pencil-square me-2"></i> Tekrar Kaydol
+                        </a>
+                        <a href="@Url.Action("Login", "Account")" class="btn btn-outline-primary">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Giriş Yap
+                        </a>
+                    </div>
+
+                    <hr />
+
+                    <p class="text-muted mb-0">
+                        Sorun devam ederse <a href="@Url.Action("Index", "Home")">Ana Sayfaya Dön</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,6 +1,7 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Enums;
+using ArtaniPaylas.Core.Interfaces;
 using ArtaniPaylas.Data;
 
 using Microsoft.AspNetCore.Authorization;
@@ -14,10 +15,12 @@ namespace ArtaniPaylas.Web.Controllers;
 public class RequestsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public RequestsController(ApplicationDbContext context)
+    public RequestsController(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     [HttpPost]
@@ -28,6 +31,14 @@ public class RequestsController : Controller
         if (userId is null)
         {
             return Challenge();
+        }
+
+        // Email verification check
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null || !user.EmailConfirmedAt.HasValue)
+        {
+            TempData["ErrorMessage"] = "Talep göndermek için lütfen e-posta adresinizi doğrulayın.";
+            return RedirectToAction("Details", "Listings", new { id = listingId });
         }
 
         var listing = await _context.Listings
@@ -68,6 +79,16 @@ public class RequestsController : Controller
 
         _context.Requests.Add(request);
         await _context.SaveChangesAsync();
+        var requesterName = user.FullName ?? "Bir kullanıcı";
+
+        // Bildirim: Listing owner'ına talep geldi
+        await _notificationService.CreateNotificationAsync(
+            listing.OwnerUserId,
+            "Yeni Talep Geldi",
+            $"'{listing.Title}' ilanınız için {requesterName} tarafından talep alındı.",
+            Core.Enums.NotificationType.RequestReceived,
+            request.Id,
+            "Request");
 
         TempData["SuccessMessage"] = "Talebin gönderildi.";
         return RedirectToAction(nameof(Outgoing));
@@ -152,6 +173,12 @@ public class RequestsController : Controller
             return Forbid();
         }
 
+        if (!IsValidRequestStatusTransition(request.Status, targetStatus))
+        {
+            TempData["ErrorMessage"] = "Bu talep için geçersiz durum geçişi.";
+            return RedirectToAction(nameof(Incoming));
+        }
+
         request.Status = targetStatus;
         request.UpdatedAt = DateTime.UtcNow;
 
@@ -172,6 +199,9 @@ public class RequestsController : Controller
 
         await _context.SaveChangesAsync();
 
+        // Notification trigger - talep alan kişiye (requester)
+        await TriggerNotificationAsync(request, targetStatus);
+
         TempData["SuccessMessage"] = "Talep durumu güncellendi.";
         return RedirectToAction(nameof(Incoming));
     }
@@ -180,4 +210,66 @@ public class RequestsController : Controller
     {
         return User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
+
+    private static bool IsValidRequestStatusTransition(RequestStatus currentStatus, RequestStatus targetStatus)
+    {
+        return currentStatus switch
+        {
+            RequestStatus.Pending => targetStatus is RequestStatus.Approved or RequestStatus.Rejected,
+            RequestStatus.Approved => targetStatus == RequestStatus.Delivered,
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Request status değişikliği için bildirim oluştur
+    /// </summary>
+    private async Task TriggerNotificationAsync(Request request, RequestStatus targetStatus)
+    {
+        try
+        {
+            var requesterUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.RequesterUserId);
+            if (requesterUser == null) return;
+
+            // Requester'a (talep gönderene) bildirim gönder
+            switch (targetStatus)
+            {
+                case RequestStatus.Approved:
+                    await _notificationService.CreateNotificationAsync(
+                        request.RequesterUserId,
+                        "Talebin Onaylandı! ✓",
+                        "Yeni talebin onaylandı. Öğeyi almaya hazır ol!",
+                        Core.Enums.NotificationType.RequestApproved,
+                        request.Id,
+                        "Request");
+                    break;
+
+                case RequestStatus.Rejected:
+                    await _notificationService.CreateNotificationAsync(
+                        request.RequesterUserId,
+                        "Talebin Reddedildi",
+                        "Başka bir talebin kabul edildi. Başka ilanları deneyin.",
+                        Core.Enums.NotificationType.RequestRejected,
+                        request.Id,
+                        "Request");
+                    break;
+
+                case RequestStatus.Delivered:
+                    await _notificationService.CreateNotificationAsync(
+                        request.RequesterUserId,
+                        "Ürün Teslim Edildi!",
+                        "Öğeyi aldığınızı teyit ettiniz. Teşekkür ederiz!",
+                        Core.Enums.NotificationType.ItemDelivered,
+                        request.Id,
+                        "Request");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Bildirim hatası olsa da devam et
+            System.Diagnostics.Debug.WriteLine($"Notification error: {ex.Message}");
+        }
+    }
 }
+

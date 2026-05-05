@@ -183,6 +183,12 @@
             text-decoration: underline;
         }
     </style>
+    
+    <!-- Toastr Notification Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    
+    <!-- ArtaniPaylas Notifications CSS -->
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
 </head>
 <body class="ap-layout-body d-flex flex-column min-vh-100" data-authenticated="@(isAuthenticated ? "true" : "false")">
     <header class="sticky-top">
@@ -284,6 +290,13 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <!-- Toastr Notification Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <!-- ArtaniPaylas Notifications JS -->
+    <script src="~/js/notifications.js" asp-append-version="true"></script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

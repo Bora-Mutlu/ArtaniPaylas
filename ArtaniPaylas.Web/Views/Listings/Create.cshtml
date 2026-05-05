@@ -1,4 +1,4 @@
-@model ListingCreateEditViewModel
+﻿@model ListingCreateEditViewModel
 @{
     ViewData["Title"] = "İlan Ekle";
     Layout = "_UserLayout";
@@ -12,11 +12,17 @@
     <a asp-action="MyListings" class="btn ap-btn-outline">İlanlarıma Dön</a>
 </section>
 
-<div class="row g-4">
+<div class="row g-4 align-items-start">
     <div class="col-xl-8">
-        <form asp-action="Create" method="post" enctype="multipart/form-data" class="space-y-4">
-            <partial name="_Form" model="Model" />
-            <div class="d-flex gap-2">
+        <form asp-action="Create" method="post" enctype="multipart/form-data" class="ap-form-shell">
+            <div class="ap-form-grid">
+                <div class="ap-form-section">
+                    <p class="ap-form-section-title">İlan Detayları</p>
+                    <partial name="_Form" model="Model" />
+                </div>
+            </div>
+
+            <div class="mt-4 ap-form-actions">
                 <button class="btn ap-btn-primary" type="submit">İlanı Yayınla</button>
                 <a asp-action="MyListings" class="btn ap-btn-outline">İptal</a>
             </div>
@@ -24,8 +30,8 @@
     </div>
 
     <div class="col-xl-4">
-        <div class="ap-card p-4 mb-3">
-            <h2 class="h6 fw-bold mb-3">Hızlı Kontrol Listesi</h2>
+        <div class="ap-form-side mb-3">
+            <h2 class="ap-form-side-title">Hızlı Kontrol Listesi</h2>
             <ul class="mb-0 ps-3 text-muted">
                 <li>Başlığı net ve kısa yaz.</li>
                 <li>Açıklamada ürün durumu ve beden bilgisini belirt.</li>
@@ -34,8 +40,8 @@
             </ul>
         </div>
 
-        <div class="ap-card p-4">
-            <h2 class="h6 fw-bold mb-2">Öneri</h2>
+        <div class="ap-form-side">
+            <h2 class="ap-form-side-title">Öneri</h2>
             <p class="mb-0 text-muted">Fotoğrafı gün ışığında çekmek ve ürünün tamamını göstermek, talep alma oranını artırır.</p>
         </div>
     </div>
@@ -44,4 +50,5 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+
 
