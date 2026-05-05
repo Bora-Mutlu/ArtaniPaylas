@@ -13,7 +13,6 @@
 
 # Runtime uploads (user-generated files)
 ArtaniPaylas.Web/wwwroot/uploads/
-docs/
 
 # Logs and temp
 *.log
