@@ -7,6 +7,7 @@ using ArtaniPaylas.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Threading.RateLimiting;
@@ -113,6 +114,12 @@ builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
 });
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 var app = builder.Build();
 
@@ -164,7 +171,33 @@ using (var scope = app.Services.CreateScope())
             await userManager.AddToRoleAsync(adminUser, "Admin");
         }
     }
+    else
+    {
+        var shouldUpdateAdmin = false;
+        if (!adminUser.EmailConfirmed)
+        {
+            adminUser.EmailConfirmed = true;
+            shouldUpdateAdmin = true;
+        }
+
+        if (!adminUser.EmailConfirmedAt.HasValue)
+        {
+            adminUser.EmailConfirmedAt = DateTime.UtcNow;
+            shouldUpdateAdmin = true;
+        }
+
+        if (shouldUpdateAdmin)
+        {
+            await userManager.UpdateAsync(adminUser);
+        }
+
+        if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
 }
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseStaticFiles();

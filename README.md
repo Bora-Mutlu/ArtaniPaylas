@@ -11,4 +11,5 @@ ArtaniPaylas, artan gıda ilanlarının ihtiyaç sahiplerine güvenli ve hızlı
 ## Kısa Bilgi
 
 - Teknoloji: `.NET 8`, `ASP.NET Core MVC`, `EF Core`, `PostgreSQL`
+
 - Katmanlar: `ArtaniPaylas.Core`, `ArtaniPaylas.Data`, `ArtaniPaylas.Web`

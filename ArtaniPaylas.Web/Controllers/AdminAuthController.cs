@@ -41,6 +41,12 @@ public class AdminAuthController : Controller
         {
             if (await _userManager.IsInRoleAsync(user, "Admin"))
             {
+                if (!user.IsActive)
+                {
+                    ModelState.AddModelError(string.Empty, "Hesabınız pasif durumdadır. Admin girişi yapamazsınız.");
+                    return View("~/Views/Admin/AdminLogin.cshtml", model);
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {

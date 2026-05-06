@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ArtaniPaylas.Web.Services;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
 
 namespace ArtaniPaylas.Web.Controllers;
 
@@ -39,15 +41,16 @@ public class AccountController : Controller
         if (User.Identity?.IsAuthenticated == true)
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            var isAdmin = currentUser != null && await _userManager.IsInRoleAsync(currentUser, "Admin");
+            if (isAdmin)
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+
             if (currentUser != null && !currentUser.EmailConfirmedAt.HasValue && !string.IsNullOrWhiteSpace(currentUser.ConfirmationToken))
             {
                 TempData["ErrorMessage"] = "E-posta adresiniz henüz doğrulanmadı. Lütfen paneldeki doğrulama bildirimini kullanın.";
                 return RedirectToAction("Index", "UserDashboard");
-            }
-
-            if (currentUser != null && await _userManager.IsInRoleAsync(currentUser, "Admin"))
-            {
-                return RedirectToAction("Index", "Admin");
             }
 
             return RedirectToAction("Index", "UserDashboard");
@@ -64,18 +67,34 @@ public class AccountController : Controller
         ViewData["ReturnUrl"] = returnUrl ?? Url.Content("~/");
         if (!ModelState.IsValid) return View(model);
 
+        var loginUser = await _userManager.FindByEmailAsync(model.Email);
+        if (loginUser != null && !loginUser.IsActive)
+        {
+            ModelState.AddModelError(string.Empty, "Hesabınız pasif durumdadır. Lütfen yönetici ile iletişime geçin.");
+            return View(model);
+        }
+
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && !user.EmailConfirmedAt.HasValue)
+            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Admin");
+
+            if (user != null && !user.IsActive)
+            {
+                await _signInManager.SignOutAsync();
+                ModelState.AddModelError(string.Empty, "Hesabınız pasif durumdadır. Lütfen yönetici ile iletişime geçin.");
+                return View(model);
+            }
+
+            if (user != null && !isAdmin && !user.EmailConfirmedAt.HasValue)
             {
                 await SendConfirmationEmailAsync(user, isResend: true);
                 TempData["ErrorMessage"] = "Hesaba giriş için önce e-posta doğrulaması gereklidir. Yeni doğrulama e-postası gönderildi.";
                 return RedirectToAction("ConfirmationPending", new { email = model.Email });
             }
 
-            if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
+            if (isAdmin)
             {
                 return RedirectToAction("Index", "Admin");
             }
@@ -174,7 +193,7 @@ public class AccountController : Controller
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
-            return RedirectToAction("Index", "UserDashboard");
+            return RedirectToAction("ConfirmationPending", new { email = user.Email });
         }
 
         if (finalImagePath != null && !finalImagePath.StartsWith("http"))
@@ -247,7 +266,15 @@ public class AccountController : Controller
         var result = await _userManager.UpdateAsync(user);
         if (result.Succeeded)
         {
-            return View("EmailConfirmed", new { Email = email });
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            TempData["SuccessMessage"] = "E-posta doğrulaması tamamlandı. Hoş geldiniz.";
+
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+
+            return RedirectToAction("Index", "UserDashboard");
         }
 
         return View("EmailConfirmationError", "Doğrulama sırasında bir hata oluştu.");
@@ -306,6 +333,105 @@ public class AccountController : Controller
         return isAuthenticated
             ? RedirectToAction("Index", "UserDashboard")
             : RedirectToAction("ConfirmationPending", new { email });
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View(new ForgotPasswordViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user != null && user.IsActive)
+        {
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(resetToken));
+            var resetLink = Url.Action(
+                "ResetPassword",
+                "Account",
+                new { email = user.Email, token = encodedToken },
+                protocol: Request.Scheme);
+
+            var emailBody = EmailTemplateBuilder.BuildActionEmailTemplate(
+                "Sifre Sifirlama Talebi",
+                "Hesap Güvenliği",
+                user.FullName ?? user.UserName ?? "Kullanıcı",
+                "Şifrenizi sıfırlamak için aşağıdaki butona tıklayın. Bu talebi siz oluşturmadıysanız e-postayı yok sayabilirsiniz.",
+                resetLink,
+                "Şifreyi Sıfırla");
+
+            await _emailService.SendEmailAsync(user.Email!, "ArtaniPaylas - Şifre Sıfırlama", emailBody);
+        }
+
+        TempData["SuccessMessage"] = "Eğer e-posta adresi sistemde kayıtlıysa şifre sıfırlama bağlantısı gönderildi.";
+        return RedirectToAction(nameof(Login));
+    }
+
+    [HttpGet]
+    public IActionResult ResetPassword(string email, string token)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+        {
+            TempData["ErrorMessage"] = "Şifre sıfırlama bağlantısı geçersiz.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        return View(new ResetPasswordViewModel
+        {
+            Email = email,
+            Token = token
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            TempData["SuccessMessage"] = "Şifreniz güncellendi. Yeni şifreniz ile giriş yapabilirsiniz.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        string decodedToken;
+        try
+        {
+            decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+        }
+        catch
+        {
+            ModelState.AddModelError(string.Empty, "Şifre sıfırlama bağlantısı geçersiz veya bozuk.");
+            return View(model);
+        }
+
+        var resetResult = await _userManager.ResetPasswordAsync(user, decodedToken, model.Password);
+        if (!resetResult.Succeeded)
+        {
+            foreach (var error in resetResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, MapIdentityError(error));
+            }
+
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Şifreniz başarıyla güncellendi. Giriş yapabilirsiniz.";
+        return RedirectToAction(nameof(Login));
     }
 
     private async Task<(string? PhotoPath, string? Error)> SaveProfileImageAsync(IFormFile file)

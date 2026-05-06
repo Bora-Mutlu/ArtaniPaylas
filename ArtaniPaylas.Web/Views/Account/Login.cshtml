@@ -62,7 +62,7 @@
                             <input asp-for="RememberMe" class="form-check-input shadow-none" type="checkbox" id="RememberMeCheck" />
                             <label class="form-check-label user-select-none" for="RememberMeCheck">Beni hatırla</label>
                         </div>
-                        <a href="javascript:void(0)" class="small text-decoration-none" onclick="alert('Şifremi unuttum özelliği daha sonra aktif olacaktır.');">Şifrenizi mi unuttunuz?</a>
+                        <a asp-action="ForgotPassword" asp-controller="Account" class="small text-decoration-none">Şifrenizi mi unuttunuz?</a>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 py-2 fw-bold text-uppercase fs-6">Giriş Yap</button>

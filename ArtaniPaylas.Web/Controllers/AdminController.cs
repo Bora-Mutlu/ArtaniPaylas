@@ -88,7 +88,10 @@ public class AdminController : Controller
     // 1. Kullanıcı Yönetimi
     public async Task<IActionResult> Users()
     {
-        var users = await _context.Users.ToListAsync();
+        var currentUserId = _userManager.GetUserId(User);
+        var users = await _context.Users
+            .Where(x => x.Id != currentUserId)
+            .ToListAsync();
         return View(users);
     }
 
@@ -99,6 +102,13 @@ public class AdminController : Controller
         var user = await _userManager.FindByIdAsync(id);
         if (user != null)
         {
+            var currentUserId = _userManager.GetUserId(User);
+            if (string.Equals(user.Id, currentUserId, StringComparison.Ordinal))
+            {
+                TempData["ErrorMessage"] = "Kendi hesabınızı bu ekrandan pasife alamazsınız.";
+                return RedirectToAction(nameof(Users));
+            }
+
             user.IsActive = !user.IsActive;
             await _userManager.UpdateAsync(user);
         }
