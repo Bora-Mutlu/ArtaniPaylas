@@ -1,299 +1,450 @@
-﻿@{
+@model HomeIndexViewModel
+@using System.Text.Json
+@using System.Text.Encodings.Web
+@{
     Layout = null;
-}
+    ViewData["Title"] = "Ana Sayfa";
 
+    var containerJson = JsonSerializer.Serialize(
+        Model.Containers.Select(x => new
+        {
+            x.Id,
+            x.Name,
+            x.Address,
+            x.District,
+            x.Latitude,
+            x.Longitude
+        }),
+        new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        });
+}
 <!DOCTYPE html>
-<html class="scroll-smooth" lang="tr">
+<html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Artanı Paylaş - Bilinçli Küratörlük Hareketi</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:ital,wght@0,500;0,700;0,800;1,500&amp;display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <title>Ayancık Belediyesi - Artanı Paylaş</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script id="tailwind-config">
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
-                        "on-primary-fixed-variant": "#005137",
-                        "primary": "#006948",
-                        "primary-fixed-dim": "#68dba9",
-                        "surface": "#fbf9f6",
-                        "on-tertiary-container": "#fffbff",
-                        "surface-container-low": "#f5f3f0",
-                        "secondary-container": "#6cf8bb",
-                        "error": "#ba1a1a",
-                        "tertiary": "#9b3e3b",
-                        "outline": "#6d7a72",
-                        "surface-dim": "#dbdad7",
-                        "on-error-container": "#93000a",
+                    colors: {
+                        "inverse-surface": "#30312d",
                         "on-secondary": "#ffffff",
-                        "tertiary-container": "#ba5551",
-                        "surface-bright": "#fbf9f6",
-                        "on-secondary-fixed": "#002113",
-                        "surface-container": "#efeeeb",
-                        "on-secondary-container": "#00714d",
-                        "on-tertiary-fixed-variant": "#7f2928",
-                        "inverse-surface": "#30312f",
-                        "on-surface": "#1b1c1a",
-                        "error-container": "#ffdad6",
-                        "on-error": "#ffffff",
-                        "secondary": "#006c49",
-                        "surface-container-high": "#eae8e5",
-                        "on-background": "#1b1c1a",
-                        "secondary-fixed-dim": "#4edea3",
-                        "inverse-primary": "#68dba9",
-                        "background": "#fbf9f6",
-                        "secondary-fixed": "#6ffbbe",
-                        "surface-container-highest": "#e4e2df",
-                        "on-tertiary": "#ffffff",
-                        "surface-variant": "#e4e2df",
-                        "on-primary": "#ffffff",
-                        "tertiary-fixed": "#ffdad7",
-                        "primary-container": "#00855d",
-                        "on-secondary-fixed-variant": "#005236",
+                        "surface-bright": "#fbf9f3",
+                        "secondary-container": "#91f3c5",
+                        "on-surface-variant": "#3f4944",
+                        "primary-fixed-dim": "#85d6b6",
+                        "secondary-fixed-dim": "#77d9ac",
+                        "surface-dim": "#dcdad4",
+                        "on-secondary-container": "#00714e",
+                        "surface-container-low": "#f5f3ed",
                         "surface-container-lowest": "#ffffff",
-                        "tertiary-fixed-dim": "#ffb3ae",
-                        "on-surface-variant": "#3d4a42",
-                        "on-primary-fixed": "#002114",
-                        "outline-variant": "#bccac0",
-                        "inverse-on-surface": "#f2f0ed",
-                        "on-primary-container": "#f5fff7",
-                        "surface-tint": "#006c4a",
-                        "primary-fixed": "#85f8c4",
-                        "on-tertiary-fixed": "#410004"
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#0b6b51",
+                        "secondary": "#006c4b",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#85d6b6",
+                        "on-surface": "#1b1c18",
+                        "on-secondary-fixed": "#002114",
+                        "on-error": "#ffffff",
+                        "surface-container": "#f0eee8",
+                        "tertiary-fixed-dim": "#ffb4aa",
+                        "on-secondary-fixed-variant": "#005137",
+                        "primary-container": "#0d6c52",
+                        "on-background": "#1b1c18",
+                        "on-tertiary-fixed": "#3c0806",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#00523d",
+                        "outline": "#6f7a74",
+                        "surface-container-highest": "#e4e2dd",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#00513c",
+                        "on-tertiary-fixed-variant": "#75322c",
+                        "on-tertiary-container": "#ffcfc9",
+                        "secondary-fixed": "#94f6c7",
+                        "background": "#fbf9f3",
+                        "tertiary-container": "#934a42",
+                        "surface": "#fbf9f3",
+                        "tertiary-fixed": "#ffdad5",
+                        "on-primary-container": "#98eac9",
+                        "tertiary": "#76332c",
+                        "inverse-on-surface": "#f3f1eb",
+                        "primary-fixed": "#a0f3d2",
+                        "outline-variant": "#bec9c2",
+                        "surface-container-high": "#eae8e2",
+                        "on-primary-fixed": "#002116"
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
+                    spacing: {
+                        "container-max": "1280px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
                     },
-                    "fontFamily": {
-                        "headline": ["Plus Jakarta Sans"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
+                    fontFamily: {
+                        display: ["Space Grotesk", "sans-serif"],
+                        body: ["Manrope", "sans-serif"]
+                    },
+                    boxShadow: {
+                        organic: "0 10px 30px rgba(13, 108, 82, 0.06)"
                     }
                 }
             }
-        }
+        };
     </script>
     <style>
         .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
         }
 
-        .glass-nav {
-            background: rgba(251, 249, 246, 0.8);
-            backdrop-filter: blur(24px);
+        body {
+            background-color: #f6f4ee;
+            color: #1b1c18;
+            font-family: "Manrope", sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 20px;
+        }
+
+        .leaflet-popup-content {
+            margin: 14px 16px;
+        }
+        #containerMap {
+            height: 450px;
+            border-radius: 32px;
+            z-index: 1;
+            overflow: hidden;
+            isolation: isolate;
+            position: relative;
+        }
+
+        .leaflet-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 32px;
+            z-index: 0;
+        }
+
+        .leaflet-pane,
+        .leaflet-top,
+        .leaflet-bottom {
+            z-index: 1;
+        }
+        .home-listing-card {
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(190, 201, 194, 0.4);
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(13, 108, 82, 0.04);
+            transition: transform 0.25s ease, border-color 0.25s ease;
+        }
+
+        .home-listing-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 82, 61, 0.24);
         }
     </style>
 </head>
-<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
-    <header class="fixed top-0 w-full z-50 bg-emerald-50/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-sm dark:shadow-none">
-        <nav class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
-            <div class="text-xl font-bold text-emerald-900 dark:text-emerald-50 tracking-tight font-headline">
-                Artanı Paylaş
-            </div>
-            <div class="hidden md:flex items-center gap-8 font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight">
-                <a asp-controller="Listings" asp-action="Index" class="text-emerald-700 dark:text-emerald-400 font-bold border-b-2 border-emerald-600 hover:text-emerald-600 transition-colors">İlanlar</a>
-                <a href="#hakkimizda" class="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 transition-colors">Hakkımızda</a>
-                <a href="#nasil-calisir" class="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 transition-colors">Nasıl Çalışır</a>
-            </div>
-            <a asp-controller="Listings" asp-action="Create" class="px-6 py-2 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-medium text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/10 no-underline">
-                İlan Ver
+<body class="font-body text-on-surface">
+    <nav class="fixed inset-x-0 top-0 z-50 h-20 border-b border-white/20 bg-white/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(13,108,82,0.04)]">
+        <div class="mx-auto flex h-full max-w-container-max items-center justify-between px-margin-mobile md:px-gutter">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 text-primary no-underline">
+                <span class="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-primary to-[#C7893C] shadow-[0_0_0_6px_rgba(11,107,81,0.12)]"></span>
+                <span class="font-display text-xl font-bold tracking-tight">Ayancık Belediyesi</span>
             </a>
-        </nav>
-    </header>
+
+            <div class="hidden items-center gap-8 md:flex">
+                <a href="#map-section" class="border-b-2 border-primary pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-primary no-underline">Harita</a>
+                <a href="#listings" class="text-sm font-semibold uppercase tracking-[0.18em] text-on-surface-variant transition-colors hover:text-primary no-underline">İlanlar</a>
+            </div>
+
+            <div class="flex items-center gap-3">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    if (User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Admin" asp-action="Index" class="hidden rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary no-underline transition hover:bg-primary/90 md:inline-flex">Belediye Paneli</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="UserDashboard" asp-action="Index" class="hidden rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary no-underline transition hover:bg-primary/90 md:inline-flex">Panelim</a>
+                    }
+
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="rounded-full border border-outline-variant bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary/5">Çıkış</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="hidden rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary no-underline transition hover:bg-primary/90 md:inline-flex">Giriş Yap</a>
+                    <a asp-controller="Account" asp-action="Login" asp-route-panel="register" class="inline-flex rounded-full border border-outline-variant p-2 text-primary transition hover:border-primary hover:bg-primary/5" aria-label="Kayıt ol">
+                        <span class="material-symbols-outlined text-[28px]">account_circle</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </nav>
 
     <main class="pt-20">
-        <section class="relative min-h-[870px] flex items-center overflow-hidden">
-            <div class="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                <div class="z-10">
-                    <h1 class="font-headline font-extrabold text-display-lg text-5xl md:text-6xl text-on-surface leading-[1.1] mb-6 tracking-tight">
-                        Artanı Paylaş ile <br />
-                        <span class="text-primary">israfı azalt,</span> <br />
-                        dayanışmayı büyüt.
+        <section class="relative mx-auto max-w-container-max overflow-hidden px-margin-mobile py-20 md:px-gutter">
+            <div class="grid items-center gap-12 lg:grid-cols-2">
+                <div class="relative z-10">
+                    <h1 class="mb-6 max-w-3xl font-display text-5xl font-bold tracking-[-0.04em] text-primary md:text-6xl">
+                        Kıyafet ilanları ve konteyner noktalarını tek yerde görün.
                     </h1>
-                    <p class="text-on-surface-variant text-lg leading-relaxed mb-10 max-w-lg">
-                        Gardırobunuzda bekleyen, sevgiyle kullanılmış kıyafetleri yeni sahipleriyle buluşturun. Paylaşmanın ve sürdürülebilirliğin en şık yoluyla topluluğumuza katılın.
+                    <p class="mb-10 max-w-2xl text-lg leading-8 text-on-surface-variant">
+                        Giriş yapmayan ziyaretçiler konteyner noktalarını ve aktif kıyafet ilanlarını inceleyebilir. Giriş yapan kullanıcılar ise belediye tarafından açılan ilanlar için randevu talebi oluşturabilir.
                     </p>
-                    <div class="flex flex-wrap gap-4">
-                        <a asp-controller="Listings" asp-action="Index" class="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full font-semibold text-lg transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20 no-underline">
-                            İlanları Gör
-                        </a>
-                        <a asp-controller="Listings" asp-action="Create" class="px-8 py-4 bg-surface-container-highest text-on-surface rounded-full font-semibold text-lg transition-all hover:bg-surface-container-high no-underline">
-                            İlan Oluştur
-                        </a>
+
+                    <div class="mb-12 flex flex-wrap gap-4">
+                        <a href="#listings" class="rounded-full bg-primary px-8 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-on-primary no-underline shadow-lg transition duration-200 hover:scale-[1.02] hover:bg-primary/90">İlanları İncele</a>
+                        <button type="button" id="focusMapButton" class="rounded-full bg-[#C7893C] px-8 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-lg transition duration-200 hover:scale-[1.02] hover:bg-[#af7330]">Konteyner Bul</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 border-t border-outline-variant pt-8 sm:grid-cols-3">
+                        <div>
+                            <p class="font-display text-4xl font-bold text-primary">@Model.ActiveListingCount</p>
+                            <p class="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-on-surface-variant">Aktif İlan</p>
+                        </div>
+                        <div>
+                            <p class="font-display text-4xl font-bold text-primary">@Model.ContainerCount</p>
+                            <p class="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-on-surface-variant">Konteyner</p>
+                        </div>
+                        <div>
+                            <p class="font-display text-4xl font-bold text-primary">24/7</p>
+                            <p class="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-on-surface-variant">Dayanışma</p>
+                        </div>
                     </div>
                 </div>
+
                 <div class="relative">
-                    <div class="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700">
-                        <img alt="Sustainable Fashion" class="w-full h-full object-cover" src="/images/home/indexfoto.png" />
-                    </div>
-                    <div class="absolute -bottom-6 -left-6 bg-surface-container-lowest p-6 rounded-2xl shadow-xl max-w-[200px]">
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="material-symbols-outlined text-primary text-3xl">eco</span>
-                            <span class="font-headline font-bold text-2xl text-on-surface">500+</span>
-                        </div>
-                        <p class="text-sm text-on-surface-variant font-medium">Bu hafta paylaşılan ürün adedi</p>
-                    </div>
-                </div>
-            </div>
-            <div class="absolute top-0 right-0 w-1/3 h-full bg-emerald-50 -z-10 rounded-l-[100px]"></div>
-        </section>
-
-        <section class="py-16 bg-surface-container-low">
-            <div class="max-w-7xl mx-auto px-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center">
-                            <span class="material-symbols-outlined text-on-secondary-container text-2xl">recycling</span>
-                        </div>
-                        <div>
-                            <h3 class="font-headline font-bold text-xl">İsrafı Azaltmak</h3>
-                            <p class="text-on-surface-variant text-sm">Gelecek nesillere daha temiz bir dünya.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center">
-                            <span class="material-symbols-outlined text-on-secondary-container text-2xl">verified_user</span>
-                        </div>
-                        <div>
-                            <h3 class="font-headline font-bold text-xl">Güvenli Akış</h3>
-                            <p class="text-on-surface-variant text-sm">Şeffaf ve güvenilir topluluk etkileşimi.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center">
-                            <span class="material-symbols-outlined text-on-secondary-container text-2xl">bolt</span>
-                        </div>
-                        <div>
-                            <h3 class="font-headline font-bold text-xl">Hızlı Eşleşme</h3>
-                            <p class="text-on-surface-variant text-sm">İhtiyaç anında anında çözüm.</p>
-                        </div>
+                    <div class="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-secondary-container/30 blur-3xl"></div>
+                    <div class="glass-card overflow-hidden rounded-[32px] p-3 shadow-organic">
+                        <img src="/images/home/indexfoto.png" alt="Ayancık Belediyesi kıyafet dayanışma alanı" class="h-[500px] w-full rounded-[24px] object-cover" />
                     </div>
                 </div>
             </div>
         </section>
+        <section id="map-section" class="bg-surface-container-low py-20">
+            <div class="mx-auto max-w-container-max px-margin-mobile md:px-gutter">
+                <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                    <div class="space-y-2">
+                        <h2 class="font-display text-3xl font-semibold tracking-[-0.03em] text-primary md:text-4xl">Konteyner Konumlari</h2>
+                        <p class="text-base leading-7 text-on-surface-variant">Ilcemizdeki aktif kiyafet toplama noktalarini harita uzerinden takip edin.</p>
+                    </div>
+                    <div class="inline-flex items-center gap-2 rounded-full bg-secondary-container px-4 py-2 text-sm font-semibold text-on-secondary-container shadow-sm">
+                        <span class="material-symbols-outlined text-[18px]">location_on</span>
+                        <span>@Model.Containers.Count Aktif Nokta</span>
+                    </div>
+                </div>
 
-        <section id="hakkimizda" class="py-24 max-w-7xl mx-auto px-8">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-                <div class="md:col-span-8 bg-surface-container-lowest p-12 rounded-[2.5rem] transition-all hover:shadow-lg hover:shadow-emerald-900/5 group">
-                    <div class="flex justify-between items-start mb-8">
-                        <div>
-                            <span class="px-4 py-1.5 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Vizyonumuz</span>
-                            <h2 class="text-4xl font-headline font-bold">Sitemizin Amacı</h2>
-                        </div>
-                        <span class="material-symbols-outlined text-5xl text-primary/20 group-hover:text-primary transition-colors">volunteer_activism</span>
-                    </div>
-                    <p class="text-on-surface-variant text-lg leading-relaxed max-w-2xl">
-                        Artanı Paylaş, tüketim çılgınlığının önüne geçmek ve tekstil atıklarını azaltmak amacıyla kurulmuş bir topluluk platformudur. Sadece bir eşya paylaşımı değil, bilinçli bir yaşam biçimi oluşturmayı hedefliyoruz.
-                    </p>
-                </div>
-                <div class="md:col-span-4 bg-primary text-on-primary p-12 rounded-[2.5rem] flex flex-col justify-end">
-                    <span class="material-symbols-outlined text-6xl mb-6">auto_awesome</span>
-                    <h3 class="text-2xl font-headline font-bold mb-4">Temel Hedeflerimiz</h3>
-                    <ul class="space-y-3 opacity-90">
-                        <li class="flex items-center gap-2 text-sm"><span class="w-1.5 h-1.5 bg-secondary-fixed rounded-full"></span> Döngüsel ekonomi</li>
-                        <li class="flex items-center gap-2 text-sm"><span class="w-1.5 h-1.5 bg-secondary-fixed rounded-full"></span> Toplumsal dayanışma</li>
-                        <li class="flex items-center gap-2 text-sm"><span class="w-1.5 h-1.5 bg-secondary-fixed rounded-full"></span> Sürdürülebilir moda</li>
-                    </ul>
-                </div>
-                <div class="md:col-span-4 aspect-square rounded-[2.5rem] overflow-hidden">
-                    <img alt="Texture" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAkGTHS75CEZIhyDx35WMfrDRCjCjh4ixlh44mzwqE9k0ffySx5qXn0sazWCTIzzbEXrR1n1AUxlVmXPyiH8wDnnOHtbt8faiKriQgv28UxCHs8Eb-Y08Vpu2N9mcyuXHH45oNvjl8Az3wmZfoFl4cfKDH_gODxcCBOkAUVrOiA2q-AMPLi4o1uH-D3kA32iMSWg1dsKszs7fulUr6WoocX-KCcAW4kFeVa2SyMQvR0YxE_rHnC8fBeCzbJFM9aQUejJK_ohIrS-k" />
-                </div>
-                <div class="md:col-span-8 bg-surface-container p-12 rounded-[2.5rem]">
-                    <h2 class="text-3xl font-headline font-bold mb-6">Neden Artanı Paylaş?</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                        <div>
-                            <h4 class="font-bold text-primary mb-2">Kolay Kullanım</h4>
-                            <p class="text-on-surface-variant text-sm">Karmaşık formlar yok. Dakikalar içinde ilanınızı oluşturun ve paylaşmaya başlayın.</p>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-primary mb-2">Yerel Topluluk</h4>
-                            <p class="text-on-surface-variant text-sm">Yakınınızdaki kişilerle eşleşerek kargo maliyetlerini ve karbon ayak izini azaltın.</p>
-                        </div>
-                    </div>
-                </div>
+                <div id="containerMap" class="border border-white/40 shadow-xl"></div>
             </div>
         </section>
 
-        <section id="nasil-calisir" class="py-24 bg-surface-container-low overflow-hidden">
-            <div class="max-w-7xl mx-auto px-8">
-                <div class="text-center mb-20">
-                    <h2 class="text-4xl font-headline font-bold mb-4">Nasıl Çalışır?</h2>
-                    <p class="text-on-surface-variant max-w-xl mx-auto italic">Paylaşmak hiç bu kadar basit olmamıştı.</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-16 relative">
-                    <div class="hidden md:block absolute top-1/2 left-0 w-full h-px bg-outline-variant/30 -translate-y-12"></div>
-                    <div class="relative z-10 text-center">
-                        <div class="w-20 h-20 bg-surface-container-lowest rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border-4 border-surface-container-low">
-                            <span class="text-3xl font-headline font-bold text-primary">01</span>
-                        </div>
-                        <div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <span class="material-symbols-outlined text-primary text-3xl">add_photo_alternate</span>
-                        </div>
-                        <h3 class="text-xl font-headline font-bold mb-3">İlan Oluştur</h3>
-                        <p class="text-on-surface-variant text-sm px-4">Paylaşmak istediğiniz eşyanın fotoğrafını çekin ve kısa bir açıklama ekleyin.</p>
-                    </div>
-                    <div class="relative z-10 text-center">
-                        <div class="w-20 h-20 bg-surface-container-lowest rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border-4 border-surface-container-low">
-                            <span class="text-3xl font-headline font-bold text-primary">02</span>
-                        </div>
-                        <div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <span class="material-symbols-outlined text-primary text-3xl">handshake</span>
-                        </div>
-                        <h3 class="text-xl font-headline font-bold mb-3">Talep ve Eşleşme</h3>
-                        <p class="text-on-surface-variant text-sm px-4">İhtiyaç sahipleriyle güvenli bir şekilde mesajlaşın ve eşleşmeyi tamamlayın.</p>
-                    </div>
-                    <div class="relative z-10 text-center">
-                        <div class="w-20 h-20 bg-surface-container-lowest rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border-4 border-surface-container-low">
-                            <span class="text-3xl font-headline font-bold text-primary">03</span>
-                        </div>
-                        <div class="w-16 h-16 bg-primary-container/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <span class="material-symbols-outlined text-primary text-3xl">local_shipping</span>
-                        </div>
-                        <h3 class="text-xl font-headline font-bold mb-3">Güvenli Teslimat</h3>
-                        <p class="text-on-surface-variant text-sm px-4">Belirlediğiniz lokasyonda veya kargo ile ürününüzü yeni sahibine ulaştırın.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <section class="py-24 max-w-5xl mx-auto px-8">
-            <div class="bg-gradient-to-br from-primary to-primary-container rounded-[3rem] p-12 md:p-20 text-center text-on-primary relative overflow-hidden">
-                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 32px 32px;"></div>
-                <h2 class="text-3xl md:text-5xl font-headline font-bold mb-8 relative z-10">Bilinçli Küratörlük Hareketine Bugün Katılın</h2>
-                <p class="text-lg opacity-90 mb-12 max-w-2xl mx-auto relative z-10">Dünyayı daha yaşanabilir kılmak için küçük bir adım, bir paylaşım yeterli.</p>
-                <div class="flex flex-wrap justify-center gap-6 relative z-10">
-                    <a asp-controller="Account" asp-action="Register" class="px-10 py-4 bg-surface-container-lowest text-primary rounded-full font-bold text-lg hover:scale-105 transition-transform no-underline">Kayıt Ol</a>
-                    <a asp-controller="Home" asp-action="Privacy" class="px-10 py-4 border-2 border-on-primary/30 rounded-full font-bold text-lg hover:bg-on-primary/10 transition-colors no-underline text-on-primary">Daha Fazla Bilgi</a>
+        <section id="listings" class="bg-background py-20">
+            <div class="mx-auto max-w-container-max px-margin-mobile md:px-gutter">
+                <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div class="max-w-2xl">
+                        <h2 class="font-display text-3xl font-semibold tracking-[-0.03em] text-primary md:text-4xl">Aktif ilanlar</h2>
+                        <p class="mt-2 text-base leading-7 text-on-surface-variant">Harita alanından ayrı ve Listings sayfasındaki gibi sıralı kart akışıyla listelenir.</p>
+                    </div>
+                    <a href="#listings" class="inline-flex items-center gap-2 rounded-full bg-secondary-container px-5 py-3 text-sm font-semibold text-on-secondary-container no-underline transition hover:brightness-95">
+                        Tüm İlanlar
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </a>
                 </div>
+
+                @if (Model.FeaturedListings.Any())
+                {
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                        @foreach (var item in Model.FeaturedListings)
+                        {
+                            var coverPhoto = item.Photos.OrderBy(x => x.SortOrder).Select(x => x.PhotoPath).FirstOrDefault() ?? item.PhotoPath;
+                            <article class="home-listing-card group">
+                                <div class="relative h-64 overflow-hidden">
+                                    @if (!string.IsNullOrWhiteSpace(coverPhoto))
+                                    {
+                                        <img src="@coverPhoto" alt="@item.Title" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                    }
+                                    else
+                                    {
+                                        <div class="flex h-full w-full items-center justify-center bg-surface-container-high text-outline">
+                                            <span class="material-symbols-outlined text-6xl">inventory_2</span>
+                                        </div>
+                                    }
+
+                                    <div class="absolute left-4 top-4 flex flex-wrap gap-2">
+                                        <span class="rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">@item.Category</span>
+                                        <span class="flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs text-on-surface backdrop-blur-md">
+                                            <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                                            @item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4 p-6">
+                                    <h3 class="font-display text-2xl font-semibold text-on-surface">@item.Title</h3>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="rounded-lg bg-surface-container px-3 py-1 text-xs text-on-surface-variant">@item.Category</span>
+                                        <span class="rounded-lg bg-surface-container px-3 py-1 text-xs text-on-surface-variant">@(string.IsNullOrWhiteSpace(item.Size) ? "Beden belirtilmedi" : item.Size)</span>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 text-on-surface-variant">
+                                        <span class="material-symbols-outlined text-[20px]">location_on</span>
+                                        <span class="text-sm">@(!string.IsNullOrWhiteSpace(item.District) ? item.District : item.Location)</span>
+                                    </div>
+
+                                    <div class="flex items-center justify-between border-t border-outline-variant/20 pt-4">
+                                        <span class="text-sm text-on-surface-variant">Detayları inceleyin</span>
+                                        <a asp-controller="Listings" asp-action="Details" asp-route-id="@item.Id" class="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white no-underline transition hover:bg-primary/90">
+                                            Detaylar
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="rounded-[32px] border border-dashed border-outline-variant/40 bg-white/70 p-12 text-center">
+                        <h3 class="font-display text-2xl font-semibold text-on-surface">Aktif ilan bulunmuyor</h3>
+                        <p class="mt-3 text-on-surface-variant">Yeni ilanlar yayınlandığında bu alanda sırasıyla listelenecek.</p>
+                    </div>
+                }
             </div>
         </section>
     </main>
 
-    <footer class="bg-zinc-100 dark:bg-zinc-900 w-full py-12">
-        <div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-7xl mx-auto gap-8">
-            <div class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 font-headline">
-                Artanı Paylaş
+    <footer class="w-full border-t border-outline-variant bg-surface-container-low">
+        <div class="mx-auto grid max-w-container-max grid-cols-1 gap-10 px-margin-mobile py-16 md:grid-cols-3 md:px-gutter">
+            <div>
+                <span class="mb-4 block font-display text-2xl font-semibold text-primary">Ayancık Belediyesi</span>
+                <p class="text-sm leading-7 text-on-surface-variant">Ayancık Belediyesi kıyafet paylaşım ilanlarını, konteyner noktalarını ve randevu sürecini tek merkezde toplar.</p>
             </div>
-            <div class="flex flex-wrap justify-center gap-8 font-['Inter'] text-sm leading-relaxed">
-                <a asp-controller="Home" asp-action="Privacy" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100">İletişim</a>
-                <a asp-controller="Home" asp-action="Privacy" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100">Kullanım Koşulları</a>
-                <a asp-controller="Home" asp-action="Privacy" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-200 transition-all opacity-80 hover:opacity-100">Gizlilik Politikası</a>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="flex flex-col gap-3">
+                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Kurumsal</p>
+                    <a asp-controller="Home" asp-action="Index" class="text-sm text-on-surface-variant no-underline transition hover:text-primary">Ana Sayfa</a>
+                    <a asp-controller="Home" asp-action="Privacy" class="text-sm text-on-surface-variant no-underline transition hover:text-primary">Bilgilendirme</a>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Hızlı Erişim</p>
+                    <a href="#listings" class="text-sm text-on-surface-variant no-underline transition hover:text-primary">İlanlar</a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Requests" asp-action="Outgoing" class="text-sm text-on-surface-variant no-underline transition hover:text-primary">Randevularım</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="text-sm text-on-surface-variant no-underline transition hover:text-primary">Giriş Yap</a>
+                    }
+                </div>
             </div>
-            <div class="text-zinc-500 dark:text-zinc-400 font-['Inter'] text-sm leading-relaxed">
-                © 2026 Artanı Paylaş. Bilinçli Küratörlük Hareketi.
+
+            <div class="flex flex-col items-start gap-4 md:items-end">
+                <div class="flex gap-4">
+                    <span class="material-symbols-outlined cursor-default text-primary">social_leaderboard</span>
+                    <span class="material-symbols-outlined cursor-default text-primary">share</span>
+                    <span class="material-symbols-outlined cursor-default text-primary">mail</span>
+                </div>
+                <p class="text-sm text-on-surface-variant md:text-right">Ayancık Belediyesi Sosyal Yardım İşleri Müdürlüğü</p>
             </div>
         </div>
     </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const mapElement = document.getElementById("containerMap");
+            const focusMapButton = document.getElementById("focusMapButton");
+
+            if (!mapElement || typeof L === "undefined") {
+                return;
+            }
+
+            const points = @Html.Raw(containerJson);
+            const defaultCenter = [41.9441, 34.5878];
+            const map = L.map("containerMap", {
+                scrollWheelZoom: true
+            }).setView(defaultCenter, 14);
+
+            L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+                attribution: "&copy; OpenStreetMap contributors"
+            }).addTo(map);
+
+            if (!points.length) {
+                return;
+            }
+
+            const bounds = [];
+
+            function escapeHtml(value) {
+                return String(value ?? "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+
+            if (focusMapButton) {
+                focusMapButton.addEventListener("click", function () {
+                    document.getElementById("map-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+            }
+
+            points.forEach(point => {
+                const marker = L.marker([point.Latitude, point.Longitude]).addTo(map);
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${point.Latitude},${point.Longitude}`;
+                marker.bindPopup(`
+                    <div>
+                        <div style="font-weight:700;color:#00523d;">${escapeHtml(point.Name)}</div>
+                        <div style="margin-top:4px;color:#3f4944;">${escapeHtml(point.District || "Ayancik")}</div>
+                        <p style="margin:6px 0 0;color:#6f7a74;font-size:12px;">${escapeHtml(point.Address || "Adres bilgisi eklenmedi.")}</p>
+                        <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:10px;padding:8px 12px;border-radius:9999px;background:#00523d;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">
+                            Google Maps'te Ac
+                        </a>
+                    </div>
+                `);
+
+                bounds.push([point.Latitude, point.Longitude]);
+            });
+
+            if (bounds.length) {
+                const boundsGroup = L.latLngBounds(bounds);
+                map.fitBounds(boundsGroup, { padding: [24, 24] });
+
+                const paddedBounds = boundsGroup.pad(0.25);
+                map.setMaxBounds(paddedBounds);
+                map.on("drag", () => {
+                    map.panInsideBounds(paddedBounds, { animate: false });
+                });
+            }
+
+            window.setTimeout(function () {
+                map.invalidateSize();
+            }, 200);
+        });
+    </script>
 </body>
 </html>
-
-

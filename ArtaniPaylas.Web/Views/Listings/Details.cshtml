@@ -1,76 +1,121 @@
-﻿@model Listing
+@model Listing
 @using System.Security.Claims
 @{
     ViewData["Title"] = "İlan Detayı";
     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
-    Layout = isAuthenticated ? "_UserLayout" : "_Layout";
+    var isAdmin = User.IsInRole("Admin");
+    Layout = isAdmin ? "_AdminLayout" : (isAuthenticated ? "_UserLayout" : "_Layout");
     var isOwner = currentUserId == Model.OwnerUserId;
-    var canRequest = isAuthenticated && !isOwner && Model.Status == ListingStatus.Active;
-    var canReport = isAuthenticated && !isOwner;
-
-    var statusClass = Model.Status switch
+    var canRequest = isAuthenticated && !isAdmin && !isOwner && Model.Status == ListingStatus.Active;
+    var canReport = isAuthenticated && !isAdmin && !isOwner;
+    var photos = Model.Photos.OrderBy(x => x.SortOrder).Select(x => x.PhotoPath).ToList();
+    if (photos.Count == 0 && !string.IsNullOrWhiteSpace(Model.PhotoPath))
     {
-        ListingStatus.Active => "ap-pill ap-pill-active",
-        ListingStatus.Completed => "ap-pill ap-pill-completed",
-        ListingStatus.Expired => "ap-pill ap-pill-danger",
-        _ => "ap-pill ap-pill-pending"
-    };
+        photos.Add(Model.PhotoPath);
+    }
+
+    var backAction = isAdmin ? "Listings" : "Index";
+    var backController = isAdmin ? "Admin" : "Listings";
+    var subtitle = string.IsNullOrWhiteSpace(Model.District) && string.IsNullOrWhiteSpace(Model.Location)
+        ? "Belediye dağıtımı"
+        : (Model.District ?? Model.Location);
 }
 
-<section class="ap-page-head">
+<style>
+    .ay-detail-panel { background: rgba(255,253,248,.9); border:1px solid rgba(24,38,31,.08); border-radius:28px; box-shadow:0 18px 40px rgba(24,38,31,.08); }
+    .ay-detail-meta { border-radius:18px; background:#f6f1e7; border:1px solid rgba(24,38,31,.06); padding:14px; }
+    .ay-detail-gallery { display:flex; flex-direction:column; gap:16px; }
+    .ay-detail-photo-button { display:block; width:100%; border:0; padding:0; background:transparent; cursor:zoom-in; }
+    .ay-detail-photo-frame { display:flex; align-items:center; justify-content:center; width:100%; min-height:320px; max-height:560px; padding:18px; border-radius:22px; background:linear-gradient(180deg,#fbf9f3 0%,#f2eee5 100%); border:1px solid rgba(24,38,31,.08); overflow:hidden; }
+    .ay-detail-photo { width:100%; height:100%; max-height:520px; object-fit:contain; border-radius:18px; }
+    .ay-detail-zoom-note { font-size:.9rem; color:#6f7a74; }
+    .ay-lightbox { position:fixed; inset:0; z-index:1050; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(12,18,16,.82); backdrop-filter:blur(10px); }
+    .ay-lightbox.is-open { display:flex; }
+    .ay-lightbox-dialog { position:relative; width:min(1180px,100%); max-height:100%; padding:20px; border-radius:28px; background:rgba(255,253,248,.96); box-shadow:0 24px 60px rgba(0,0,0,.25); }
+    .ay-lightbox-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; padding-right:52px; }
+    .ay-lightbox-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .ay-lightbox-control { width:42px; height:42px; border:0; border-radius:9999px; background:#18261f; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; font-weight:800; line-height:1; }
+    .ay-lightbox-control:disabled { opacity:.35; cursor:not-allowed; }
+    .ay-lightbox-close { position:absolute; top:14px; right:14px; }
+    .ay-lightbox-counter { color:#3f4944; font-weight:800; font-size:.9rem; }
+    .ay-lightbox-frame { position:relative; display:flex; align-items:center; justify-content:center; min-height:60vh; max-height:78vh; overflow:auto; border-radius:22px; background:linear-gradient(180deg,#fbf9f3 0%,#ece7db 100%); }
+    .ay-lightbox-image { max-width:100%; max-height:78vh; object-fit:contain; transform-origin:center center; transition:transform 140ms ease; }
+    .ay-lightbox-nav { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:64px; border:0; border-radius:9999px; background:rgba(24,38,31,.82); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; font-size:34px; font-weight:800; line-height:1; }
+    .ay-lightbox-prev { left:14px; }
+    .ay-lightbox-next { right:14px; }
+    .ay-lightbox-nav:disabled { opacity:.25; cursor:not-allowed; }
+    @@media (max-width: 640px) {
+        .ay-lightbox { padding:10px; }
+        .ay-lightbox-dialog { padding:12px; border-radius:20px; }
+        .ay-lightbox-actions { align-items:flex-start; flex-direction:column; padding-right:48px; }
+        .ay-lightbox-frame { min-height:58vh; }
+    }
+</style>
+
+<section class="ap-page-head mb-4">
     <div>
         <h1 class="ap-title">@Model.Title</h1>
-        <p class="ap-subtitle">@Model.Location</p>
+        <p class="ap-subtitle">@subtitle</p>
     </div>
-    <a asp-action="Index" class="btn ap-btn-outline">İlanlara Dön</a>
+    <a asp-controller="@backController" asp-action="@backAction" class="btn ap-btn-outline">İlanlara Dön</a>
 </section>
 
 <div class="row g-4">
     <div class="col-lg-7">
-        <div class="ap-card p-4 h-100">
-            <p class="mb-3">@Model.Description</p>
-            <div class="d-flex flex-column gap-2 text-slate-700">
-                <div><strong>Son Tüketim:</strong> @Model.ExpirationDate.ToString("dd.MM.yyyy")</div>
-                <div><strong>Durum:</strong> <span class="@statusClass">@Model.Status.ToDisplayText()</span></div>
-                <div>
-                    <strong>İlan Sahibi:</strong>
-                    @(Model.OwnerUser?.FullName ?? Model.OwnerUser?.UserName ?? "Kullanıcı")
-                    @if (Model.OwnerUser != null)
-                    {
-                        <partial name="Badges/_VerifiedEmailBadge" model="Model.OwnerUser" />
-                        <partial name="Badges/_TrustedUserBadge" model="Model.OwnerUser" />
-                    }
-                </div>
-                @if (Model.OwnerUser?.TrustScore > 0)
-                {
-                    <div class="text-muted">
-                        <strong>Puan:</strong> 
-                        <span style="color: #006948; font-weight: 600;">
-                            ⭐ @Model.OwnerUser.TrustScore.ToString("F1")/5.0
-                        </span>
-                    </div>
-                }
+        <div class="ay-detail-panel p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="ap-pill ap-pill-active">@Model.Status.ToDisplayText()</span>
+                <small class="text-muted">@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
             </div>
 
-            <div class="mt-4">
-                @if (canRequest)
-                {
-                    <form asp-controller="Requests" asp-action="Create" method="post">
-                        <input type="hidden" name="listingId" value="@Model.Id" />
-                        <button type="submit" class="btn ap-btn-primary">Talep Et</button>
-                    </form>
-                }
-                else if (!isAuthenticated)
-                {
-                    <div class="ap-empty">Talep göndermek için giriş yapmalısın.</div>
-                }
+            <div class="row g-3 mb-4">
+                <div class="col-md-6"><div class="ay-detail-meta"><strong>Kategori</strong><div>@Model.Category</div></div></div>
+                <div class="col-md-6"><div class="ay-detail-meta"><strong>Beden</strong><div>@(Model.Size ?? "Belirtilmedi")</div></div></div>
+                <div class="col-md-6"><div class="ay-detail-meta"><strong>Cinsiyet</strong><div>@(Model.Gender ?? "Belirtilmedi")</div></div></div>
+                <div class="col-md-6"><div class="ay-detail-meta"><strong>Yaş grubu</strong><div>@(Model.AgeGroup ?? "Belirtilmedi")</div></div></div>
+                <div class="col-md-6"><div class="ay-detail-meta"><strong>Ürün durumu</strong><div>@(Model.Condition ?? "Belirtilmedi")</div></div></div>
+                <div class="col-md-6"><div class="ay-detail-meta"><strong>Son tarih</strong><div>@Model.ExpirationDate.ToString("dd.MM.yyyy")</div></div></div>
             </div>
+
+            <h2 class="h5 mb-2">Açıklama</h2>
+            <p class="text-muted mb-4">@Model.Description</p>
+
+            <div class="ay-detail-meta mb-4">
+                <strong>Teslim ve iletişim notu</strong>
+                <div class="mt-1">@(Model.ContactNote ?? "Belediye uygun dağıtım bilgisini randevu onayında iletir.")</div>
+            </div>
+
+            @if (canRequest)
+            {
+                <div class="ay-detail-meta">
+                    <h3 class="h5 mb-3">Randevu talebi oluştur</h3>
+                    <form asp-controller="Requests" asp-action="Create" method="post" class="row g-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ListingId" value="@Model.Id" />
+                        <div class="col-md-6">
+                            <label class="form-label">Talep edilen tarih ve saat</label>
+                            <input name="RequestedAppointmentAt" class="form-control" type="datetime-local" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Not</label>
+                            <textarea name="RequesterNote" class="form-control ap-no-resize" rows="3" placeholder="Örneğin uygun olduğunuz saat aralığı"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn ap-btn-primary">Randevu Talebi Gönder</button>
+                        </div>
+                    </form>
+                </div>
+            }
+            else if (!isAuthenticated)
+            {
+                <div class="ap-empty">Randevu oluşturmak için giriş yapmanız gerekir.</div>
+            }
 
             @if (canReport)
             {
-                <div class="mt-4 pt-3 border-top">
-                    <h3 class="h6 fw-bold mb-2">İlanı Şikayet Et</h3>
+                <div class="mt-4 pt-4 border-top">
+                    <h3 class="h6 fw-bold mb-2">İlanı şikayet et</h3>
                     <form asp-action="Report" method="post" class="d-flex flex-column gap-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@Model.Id" />
@@ -84,58 +129,189 @@
     </div>
 
     <div class="col-lg-5">
-        <div class="ap-card p-3 h-100">
-            @if (!string.IsNullOrWhiteSpace(Model.PhotoPath))
+        <div class="ay-detail-panel p-3">
+            @if (photos.Any())
             {
-                <img src="@Model.PhotoPath" class="img-fluid rounded-3" alt="@Model.Title" style="max-height: 360px; width: 100%; object-fit: cover;" />
+                <div class="ay-detail-gallery">
+                    <div class="px-2 pt-2 ay-detail-zoom-note">Fotoğrafı tam görmek için üzerine tıklayın.</div>
+                    @for (var i = 0; i < photos.Count; i++)
+                    {
+                        var photo = photos[i];
+                        <button type="button" class="ay-detail-photo-button js-detail-photo" data-photo-src="@photo" data-photo-alt="@Model.Title" data-photo-index="@i">
+                            <div class="ay-detail-photo-frame">
+                                <img src="@photo" alt="@Model.Title" class="ay-detail-photo" />
+                            </div>
+                        </button>
+                    }
+                </div>
             }
             else
             {
-                <div class="d-flex justify-content-center align-items-center h-100 bg-light rounded-3 text-muted">Fotoğraf eklenmemiş</div>
+                <div class="d-flex align-items-center justify-content-center bg-light rounded-4" style="min-height:260px;">Fotoğraf eklenmemiş</div>
             }
         </div>
     </div>
 </div>
 
-@if (isOwner)
-{
-    <section class="ap-section">
-        <div class="ap-page-head mb-3">
+<div id="listing-lightbox" class="ay-lightbox" aria-hidden="true">
+    <div class="ay-lightbox-dialog">
+        <button type="button" id="listing-lightbox-close" class="ay-lightbox-control ay-lightbox-close" aria-label="Kapat">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <div class="ay-lightbox-actions">
             <div>
-                <h2 class="h4 mb-0">Gelen Talepler</h2>
-                <p class="ap-subtitle">Bu ilana gelen talepleri buradan takip edebilirsin.</p>
+                <div id="listing-lightbox-counter" class="ay-lightbox-counter"></div>
+                <div class="ay-detail-zoom-note">Ok tuşlarıyla fotoğraf değiştir, + / - ile yakınlaştır.</div>
+            </div>
+            <div class="ay-lightbox-tools">
+                <button type="button" id="listing-zoom-out" class="ay-lightbox-control" aria-label="Küçült">
+                    <span aria-hidden="true">-</span>
+                </button>
+                <button type="button" id="listing-zoom-reset" class="ay-lightbox-control" aria-label="Sıfırla">
+                    <span aria-hidden="true">0</span>
+                </button>
+                <button type="button" id="listing-zoom-in" class="ay-lightbox-control" aria-label="Büyüt">
+                    <span aria-hidden="true">+</span>
+                </button>
             </div>
         </div>
+        <div class="ay-lightbox-frame">
+            <button type="button" id="listing-lightbox-prev" class="ay-lightbox-nav ay-lightbox-prev" aria-label="Önceki fotoğraf">
+                <span aria-hidden="true">&lsaquo;</span>
+            </button>
+            <img id="listing-lightbox-image" class="ay-lightbox-image" alt="" />
+            <button type="button" id="listing-lightbox-next" class="ay-lightbox-nav ay-lightbox-next" aria-label="Sonraki fotoğraf">
+                <span aria-hidden="true">&rsaquo;</span>
+            </button>
+        </div>
+    </div>
+</div>
 
-        @if (!Model.Requests.Any())
-        {
-            <div class="ap-empty">Bu ilana henüz talep gelmedi.</div>
-        }
-        else
-        {
-            <div class="ap-card p-3">
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0 ap-table">
-                        <thead>
-                            <tr>
-                                <th>Kullanıcı</th>
-                                <th>Durum</th>
-                                <th>Tarih</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var request in Model.Requests.OrderByDescending(x => x.CreatedAt))
-                        {
-                            <tr>
-                                <td>@(request.RequesterUser?.FullName ?? request.RequesterUser?.UserName ?? "Kullanıcı")</td>
-                                <td>@request.Status.ToDisplayText()</td>
-                                <td>@request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
-    </section>
+@section Scripts {
+    <script>
+        (() => {
+            const lightbox = document.getElementById("listing-lightbox");
+            const lightboxImage = document.getElementById("listing-lightbox-image");
+            const closeButton = document.getElementById("listing-lightbox-close");
+            const prevButton = document.getElementById("listing-lightbox-prev");
+            const nextButton = document.getElementById("listing-lightbox-next");
+            const zoomInButton = document.getElementById("listing-zoom-in");
+            const zoomOutButton = document.getElementById("listing-zoom-out");
+            const zoomResetButton = document.getElementById("listing-zoom-reset");
+            const counter = document.getElementById("listing-lightbox-counter");
+            const triggers = Array.from(document.querySelectorAll(".js-detail-photo"));
+            const photos = triggers
+                .map((trigger) => ({
+                    src: trigger.getAttribute("data-photo-src"),
+                    alt: trigger.getAttribute("data-photo-alt") ?? "İlan fotoğrafı"
+                }))
+                .filter((photo) => photo.src);
+
+            if (!lightbox || !lightboxImage || !closeButton || !prevButton || !nextButton || !zoomInButton || !zoomOutButton || !zoomResetButton || !counter || !photos.length) {
+                return;
+            }
+
+            let currentIndex = 0;
+            let zoom = 1;
+
+            triggers.forEach((trigger, index) => {
+                trigger.addEventListener("click", () => {
+                    openLightbox(index);
+                });
+            });
+
+            closeButton.addEventListener("click", closeLightbox);
+            prevButton.addEventListener("click", showPrevious);
+            nextButton.addEventListener("click", showNext);
+            zoomInButton.addEventListener("click", () => setZoom(zoom + 0.25));
+            zoomOutButton.addEventListener("click", () => setZoom(zoom - 0.25));
+            zoomResetButton.addEventListener("click", () => setZoom(1));
+            lightbox.addEventListener("click", (event) => {
+                if (event.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (!lightbox.classList.contains("is-open")) {
+                    return;
+                }
+
+                if (event.key === "Escape") {
+                    closeLightbox();
+                } else if (event.key === "ArrowLeft") {
+                    showPrevious();
+                } else if (event.key === "ArrowRight") {
+                    showNext();
+                } else if (event.key === "+" || event.key === "=") {
+                    setZoom(zoom + 0.25);
+                } else if (event.key === "-" || event.key === "_") {
+                    setZoom(zoom - 0.25);
+                } else if (event.key === "0") {
+                    setZoom(1);
+                }
+            });
+
+            function openLightbox(index) {
+                currentIndex = clampIndex(index);
+                setZoom(1);
+                renderPhoto();
+                lightbox.classList.add("is-open");
+                lightbox.setAttribute("aria-hidden", "false");
+                document.body.style.overflow = "hidden";
+            }
+
+            function renderPhoto() {
+                const photo = photos[currentIndex];
+                lightboxImage.src = photo.src;
+                lightboxImage.alt = photo.alt;
+                counter.textContent = `${currentIndex + 1} / ${photos.length}`;
+                prevButton.disabled = photos.length <= 1;
+                nextButton.disabled = photos.length <= 1;
+            }
+
+            function showPrevious() {
+                if (photos.length <= 1) {
+                    return;
+                }
+
+                currentIndex = currentIndex === 0 ? photos.length - 1 : currentIndex - 1;
+                setZoom(1);
+                renderPhoto();
+            }
+
+            function showNext() {
+                if (photos.length <= 1) {
+                    return;
+                }
+
+                currentIndex = currentIndex === photos.length - 1 ? 0 : currentIndex + 1;
+                setZoom(1);
+                renderPhoto();
+            }
+
+            function setZoom(value) {
+                zoom = Math.min(3, Math.max(0.5, value));
+                lightboxImage.style.transform = `scale(${zoom})`;
+                zoomOutButton.disabled = zoom <= 0.5;
+                zoomInButton.disabled = zoom >= 3;
+            }
+
+            function closeLightbox() {
+                lightbox.classList.remove("is-open");
+                lightbox.setAttribute("aria-hidden", "true");
+                lightboxImage.removeAttribute("src");
+                setZoom(1);
+                document.body.style.overflow = "";
+            }
+
+            function clampIndex(index) {
+                if (!Number.isInteger(index) || index < 0 || index >= photos.length) {
+                    return 0;
+                }
+
+                return index;
+            }
+        })();
+    </script>
 }

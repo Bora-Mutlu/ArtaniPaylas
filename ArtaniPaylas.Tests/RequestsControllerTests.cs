@@ -6,7 +6,9 @@ using ArtaniPaylas.Data;
 using ArtaniPaylas.Web.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace ArtaniPaylas.Tests;
 
@@ -22,6 +24,7 @@ public class RequestsControllerTests
         {
             ListingId = listing.Id,
             RequesterUserId = "requester-1",
+            RequestedAppointmentAt = DateTime.UtcNow.AddDays(1),
             Status = RequestStatus.Pending
         };
         context.Requests.Add(request);
@@ -37,13 +40,25 @@ public class RequestsControllerTests
     }
 
     [Fact]
-    public async Task Approve_ShouldCompleteListing_AndRejectOtherPendingRequests()
+    public async Task Approve_ShouldConfirmAppointment_WhenCurrentStatusIsPending()
     {
         await using var context = BuildContext();
         SeedUsers(context);
         var listing = SeedListing(context, "owner-1");
-        var approvedTarget = new Request { ListingId = listing.Id, RequesterUserId = "requester-1", Status = RequestStatus.Pending };
-        var anotherPending = new Request { ListingId = listing.Id, RequesterUserId = "requester-2", Status = RequestStatus.Pending };
+        var approvedTarget = new Request
+        {
+            ListingId = listing.Id,
+            RequesterUserId = "requester-1",
+            RequestedAppointmentAt = DateTime.UtcNow.AddDays(2),
+            Status = RequestStatus.Pending
+        };
+        var anotherPending = new Request
+        {
+            ListingId = listing.Id,
+            RequesterUserId = "requester-2",
+            RequestedAppointmentAt = DateTime.UtcNow.AddDays(3),
+            Status = RequestStatus.Pending
+        };
         context.Requests.AddRange(approvedTarget, anotherPending);
         await context.SaveChangesAsync();
 
@@ -56,21 +71,22 @@ public class RequestsControllerTests
         var updatedListing = await context.Listings.FindAsync(listing.Id);
 
         Assert.Equal(RequestStatus.Approved, updatedTarget!.Status);
-        Assert.Equal(RequestStatus.Rejected, updatedOther!.Status);
-        Assert.Equal(ListingStatus.Completed, updatedListing!.Status);
+        Assert.NotNull(updatedTarget.ConfirmedAppointmentAt);
+        Assert.Equal(RequestStatus.Pending, updatedOther!.Status);
+        Assert.Equal(ListingStatus.Active, updatedListing!.Status);
     }
 
     private static RequestsController BuildController(ApplicationDbContext context, string userId)
     {
         var controller = new RequestsController(context, new NoopNotificationService());
+        var httpContext = new DefaultHttpContext();
         var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "TestAuth");
         controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext
-            {
-                User = new ClaimsPrincipal(identity)
-            }
+            HttpContext = httpContext
         };
+        httpContext.User = new ClaimsPrincipal(identity);
+        controller.TempData = new TempDataDictionary(httpContext, new TestTempDataProvider());
         return controller;
     }
 
@@ -109,29 +125,41 @@ public class RequestsControllerTests
 
     private sealed class NoopNotificationService : INotificationService
     {
-        public Task CreateNotificationAsync(string userId, string title, string message, NotificationType type, int? relatedEntityId = null, string? relatedEntityType = null)
+        public Task CreateNotificationAsync(string userId, string title, string message, NotificationType type, int? relatedEntityId = null, string? relatedEntityType = null, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
 
-        public Task<List<Notification>> GetUserNotificationsAsync(string userId, bool unreadOnly = false, int skip = 0, int take = 20)
+        public Task<IEnumerable<dynamic>> GetUserNotificationsAsync(string userId, int limit = 20, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(new List<Notification>());
+            return Task.FromResult<IEnumerable<dynamic>>(Array.Empty<dynamic>());
         }
 
-        public Task<int> GetUnreadCountAsync(string userId)
+        public Task<int> GetUnreadCountAsync(string userId, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(0);
         }
 
-        public Task<bool> MarkAsReadAsync(int notificationId, string userId)
+        public Task MarkAsReadAsync(int notificationId, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(true);
+            return Task.CompletedTask;
         }
 
-        public Task<int> MarkAllAsReadAsync(string userId)
+        public Task DeleteNotificationAsync(int notificationId, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(0);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class TestTempDataProvider : ITempDataProvider
+    {
+        public IDictionary<string, object> LoadTempData(HttpContext context)
+        {
+            return new Dictionary<string, object>();
+        }
+
+        public void SaveTempData(HttpContext context, IDictionary<string, object> values)
+        {
         }
     }
 }

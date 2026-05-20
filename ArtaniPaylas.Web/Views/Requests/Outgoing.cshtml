@@ -1,110 +1,62 @@
-﻿@model IReadOnlyCollection<Request>
+@model IReadOnlyCollection<Request>
 @{
-    ViewData["Title"] = "Giden Talepler";
+    ViewData["Title"] = "Randevularım";
     Layout = "_UserLayout";
-
-    var totalCount = Model.Count;
-    var pendingCount = Model.Count(x => x.Status == RequestStatus.Pending);
-    var approvedCount = Model.Count(x => x.Status == RequestStatus.Approved);
-    var deliveredCount = Model.Count(x => x.Status == RequestStatus.Delivered);
 }
 
-<section class="ap-page-head">
+<section class="ap-page-head mb-4">
     <div>
-        <h1 class="ap-title">Gönderdiğim Talepler</h1>
-        <p class="ap-subtitle">Talep durumlarını buradan takip edebilirsin.</p>
+        <h1 class="ap-title">Randevu Takip Ekrani</h1>
+        <p class="ap-subtitle">Belediyeye gönderdiğiniz randevu taleplerinin güncel durumunu buradan izleyebilirsiniz.</p>
     </div>
 </section>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">Toplam Talep</small>
-            <div class="h4 mt-2 mb-0">@totalCount</div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">Bekleyen</small>
-            <div class="h4 mt-2 mb-0 text-warning">@pendingCount</div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">Onaylanan</small>
-            <div class="h4 mt-2 mb-0 text-success">@approvedCount</div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">Teslim Edilen</small>
-            <div class="h4 mt-2 mb-0 text-primary">@deliveredCount</div>
-        </div>
-    </div>
-</div>
-
 @if (!Model.Any())
 {
-    <div class="ap-empty">Henüz bir talep göndermedin.</div>
+    <div class="ap-empty">Henüz oluşturulmuş randevu bulunmuyor.</div>
 }
 else
 {
-    <div class="ap-card p-3">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0 ap-table">
-                <thead>
-                    <tr>
-                        <th>İlan</th>
-                        <th>İlan Sahibi</th>
-                        <th>Durum</th>
-                        <th>Tarih</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
-                    var statusClass = item.Status switch
-                    {
-                        RequestStatus.Pending => "ap-pill ap-pill-pending",
-                        RequestStatus.Approved => "ap-pill ap-pill-active",
-                        RequestStatus.Delivered => "ap-pill ap-pill-completed",
-                        _ => "ap-pill ap-pill-danger"
-                    };
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            var statusClass = item.Status switch
+            {
+                RequestStatus.Pending => "ap-pill ap-pill-pending",
+                RequestStatus.Approved => "ap-pill ap-pill-active",
+                RequestStatus.Delivered => "ap-pill ap-pill-completed",
+                _ => "ap-pill ap-pill-danger"
+            };
 
-                    <tr>
-                        <td>
-                            <div class="fw-semibold">@item.Listing?.Title</div>
-                            <small class="text-muted">İlan No: @item.ListingId</small>
-                        </td>
-                        <td>
-                            @(item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName)
-                            @if (item.Listing?.OwnerUser != null)
-                            {
-                                <div class="mt-1">
-                                    <partial name="Badges/_VerifiedEmailBadge" model="item.Listing.OwnerUser" />
-                                    <partial name="Badges/_TrustedUserBadge" model="item.Listing.OwnerUser" />
-                                </div>
-                            }
-                        </td>
-                        <td><span class="@statusClass">@item.Status.ToDisplayText()</span></td>
-                        <td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                        <td>
-                            @if (item.Status == RequestStatus.Delivered)
-                            {
-                                <a asp-controller="Reviews" asp-action="Create" asp-route-requestId="@item.Id" class="btn btn-sm ap-btn-outline">Değerlendir</a>
-                            }
-                            else
-                            {
-                                <a asp-controller="Listings" asp-action="Details" asp-route-id="@item.ListingId" class="btn btn-sm ap-btn-outline">İlanı Gör</a>
-                            }
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+            <div class="col-lg-6">
+                <article class="ap-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">@item.Listing?.Title</h2>
+                        <span class="@statusClass">@item.Status.ToDisplayText()</span>
+                    </div>
+                    <div class="row g-3 text-sm">
+                        <div class="col-md-6">
+                            <div class="ay-detail-meta">
+                                <strong>Talep edilen saat</strong>
+                                <div>@item.RequestedAppointmentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="ay-detail-meta">
+                                <strong>Onaylanan saat</strong>
+                                <div>@(item.ConfirmedAppointmentAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "-")</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="ay-detail-meta">
+                                <strong>Not</strong>
+                                <div>@(item.MunicipalityNote ?? item.RequesterNote ?? "Not bulunmuyor.")</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a asp-controller="Listings" asp-action="Details" asp-route-id="@item.ListingId" class="btn ap-btn-outline mt-3">İlan Detayını Aç</a>
+                </article>
+            </div>
+        }
     </div>
 }
-
-

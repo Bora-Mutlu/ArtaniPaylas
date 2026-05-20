@@ -1,54 +1,479 @@
-﻿@model ListingCreateEditViewModel
+@using System.Globalization
+@model ListingCreateEditViewModel
 @{
     ViewData["Title"] = "İlan Ekle";
-    Layout = "_UserLayout";
+    Layout = "_AdminLayout";
+    var todayLabel = DateTime.Now.ToString("dd MMMM yyyy", new CultureInfo("tr-TR"));
+    Model.Location ??= "Belediye dağıtımı";
 }
 
-<section class="ap-page-head">
-    <div>
-        <h1 class="ap-title">Yeni İlan Oluştur</h1>
-        <p class="ap-subtitle">Paylaşmak istediğin giysiyi birkaç adımda yayınla.</p>
-    </div>
-    <a asp-action="MyListings" class="btn ap-btn-outline">İlanlarıma Dön</a>
-</section>
+<style>
+    .listing-create-shell {
+        --ap-surface: rgba(255, 255, 255, 0.72);
+        --ap-surface-strong: #f5f3ed;
+        --ap-border-strong: #e5e2d9;
+        --ap-text: #1b1c18;
+        --ap-muted: #3f4944;
+        --ap-primary-soft: #0d6c52;
+        --ap-shadow: 0 20px 40px rgba(13, 108, 82, 0.08);
+        color: var(--ap-text);
+    }
 
-<div class="row g-4 align-items-start">
-    <div class="col-xl-8">
-        <form asp-action="Create" method="post" enctype="multipart/form-data" class="ap-form-shell">
-            <div class="ap-form-grid">
-                <div class="ap-form-section">
-                    <p class="ap-form-section-title">İlan Detayları</p>
-                    <partial name="_Form" model="Model" />
+    .listing-glass-card {
+        background: var(--ap-surface);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: var(--ap-shadow);
+    }
+
+    .listing-field label {
+        display: inline-block;
+        margin-bottom: 6px;
+        margin-left: 4px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--ap-muted);
+        letter-spacing: 0.01em;
+    }
+
+    .listing-field input,
+    .listing-field select,
+    .listing-field textarea {
+        width: 100%;
+        border-radius: 1rem;
+        border: 1px solid var(--ap-border-strong);
+        background: var(--ap-surface-strong);
+        padding: 0.9rem 1rem;
+        color: var(--ap-text);
+        transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .listing-field input,
+    .listing-field select {
+        min-height: 56px;
+    }
+
+    .listing-field textarea {
+        min-height: 132px;
+        resize: vertical;
+    }
+
+    .listing-field input:focus,
+    .listing-field select:focus,
+    .listing-field textarea:focus {
+        outline: none;
+        border-color: var(--ap-primary-soft);
+        box-shadow: 0 0 0 4px rgba(13, 108, 82, 0.12);
+    }
+
+    .listing-input-wrap {
+        transition: transform 180ms ease;
+    }
+
+    .listing-input-wrap.is-focused {
+        transform: scale(1.01);
+    }
+
+    .listing-dropzone {
+        border: 2px dashed rgba(190, 201, 194, 0.9);
+        transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+    }
+
+    .listing-dropzone:hover,
+    .listing-dropzone.is-active {
+        border-color: var(--ap-primary-soft);
+        background: rgba(13, 108, 82, 0.05);
+        transform: translateY(-1px);
+    }
+
+    .listing-summary-image::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0) 30%, rgba(251, 249, 243, 0.7) 100%);
+    }
+
+    .listing-preview-tile button {
+        opacity: 0;
+        transition: opacity 180ms ease;
+    }
+
+    .listing-preview-tile:hover button {
+        opacity: 1;
+    }
+</style>
+
+<div class="listing-create-shell px-1 md:px-2 pb-4">
+    <header class="mb-5 md:mb-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+                <a asp-controller="Admin" asp-action="Listings" class="inline-flex items-center gap-2 text-[0.85rem] font-bold text-[#00523d] no-underline">
+                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                    İlan Yönetimi
+                </a>
+                <h1 class="mt-3 text-3xl md:text-4xl font-bold tracking-tight">Yeni İlan Oluştur</h1>
+                <p class="mt-2 text-base md:text-lg text-slate-600">Belediye adına yayınlanacak kıyafet ilanını oluştur.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <a asp-controller="Admin" asp-action="Listings" class="inline-flex h-12 items-center justify-center rounded-full border border-[#00523d] px-5 text-sm font-bold text-[#00523d] no-underline transition hover:bg-[#00523d]/5">
+                    İptal
+                </a>
+                <button class="inline-flex h-12 items-center justify-center rounded-full bg-[#0d6c52] px-5 text-sm font-bold text-white shadow-lg shadow-[#0d6c52]/20 transition hover:scale-[1.02] active:scale-95"
+                        form="new-listing-form"
+                        type="submit">
+                    İlanı Yayınla
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <form asp-action="Create"
+          id="new-listing-form"
+          method="post"
+          enctype="multipart/form-data"
+          class="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:items-start">
+        <input asp-for="Location" type="hidden" value="Belediye dağıtımı" />
+        <input asp-for="District" type="hidden" />
+
+        <div class="xl:col-span-8 space-y-6">
+            <section class="listing-glass-card rounded-[32px] p-5 md:p-8">
+                <div asp-validation-summary="ModelOnly" class="mb-4 rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
+
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div class="listing-field listing-input-wrap md:col-span-2">
+                        <label asp-for="Title">Başlık</label>
+                        <input asp-for="Title" placeholder="Örn: Bebek Kışlık Mont Seti" />
+                        <div class="mt-2 text-sm text-slate-500">Kısa ve anlaşılır başlıklar ilanların daha hızlı bulunmasını sağlar.</div>
+                        <span asp-validation-for="Title" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="listing-field listing-input-wrap">
+                        <label asp-for="Category">Kategori</label>
+                        <select asp-for="Category">
+                            <option>Genel Giyim</option>
+                            <option>Mont</option>
+                            <option>Kazak</option>
+                            <option>Tişört</option>
+                            <option>Pantolon</option>
+                            <option>Ayakkabı</option>
+                            <option>Bebek Giyimi</option>
+                            <option>Çocuk Giyimi</option>
+                            <option>Aksesuar</option>
+                        </select>
+                        <span asp-validation-for="Category" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="listing-field listing-input-wrap">
+                        <label asp-for="Size">Beden</label>
+                        <input asp-for="Size" placeholder="S, M, 38 veya yaş aralığı" />
+                        <span asp-validation-for="Size" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="listing-field listing-input-wrap">
+                        <label asp-for="Condition">Durum</label>
+                        <select asp-for="Condition">
+                            <option value="">Seçiniz</option>
+                            <option>Yeni Gibi</option>
+                            <option>İyi</option>
+                            <option>Orta</option>
+                            <option>Tamire İhtiyaç Var</option>
+                        </select>
+                        <span asp-validation-for="Condition" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="listing-field listing-input-wrap">
+                        <label asp-for="AgeGroup">Yaş Grubu</label>
+                        <select asp-for="AgeGroup">
+                            <option value="">Seçiniz</option>
+                            <option>Bebek</option>
+                            <option>Çocuk</option>
+                            <option>Genç</option>
+                            <option>Yetişkin</option>
+                        </select>
+                        <span asp-validation-for="AgeGroup" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="listing-field listing-input-wrap">
+                        <label asp-for="Gender">Cinsiyet</label>
+                        <select asp-for="Gender">
+                            <option value="">Seçiniz</option>
+                            <option>Kadın</option>
+                            <option>Erkek</option>
+                            <option>Unisex</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="listing-field listing-input-wrap">
+                        <label asp-for="ExpirationDate">İlan Son Tarihi</label>
+                        <input asp-for="ExpirationDate" type="date" />
+                        <div class="mt-2 text-sm text-slate-500">Bu tarihten sonra ilan pasife alınır.</div>
+                        <span asp-validation-for="ExpirationDate" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="md:col-span-2 rounded-[24px] border border-[#e5e2d9] bg-[#f5f3ed] px-5 py-4 text-sm text-slate-600">
+                        Bu ilan belediye dağıtımı olarak yayınlanır. Konum ve mahalle bilgisi sistem tarafından otomatik belediye dağıtımı olarak işaretlenecek.
+                    </div>
+
+                    <div class="listing-field listing-input-wrap md:col-span-2">
+                        <label asp-for="Description">Açıklama</label>
+                        <textarea asp-for="Description" placeholder="Ürün ölçüsü, durumu, eksik parçası varsa ve dağıtım için önemli notları yazın."></textarea>
+                        <span asp-validation-for="Description" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
+
+                    <div class="listing-field listing-input-wrap md:col-span-2">
+                        <label asp-for="ContactNote">Dağıtım Notu</label>
+                        <textarea asp-for="ContactNote" class="min-h-[110px]" placeholder="Örn: Dağıtım günleri salı ve cuma, teslim belediye koordinasyonuyla yapılacaktır."></textarea>
+                        <span asp-validation-for="ContactNote" class="mt-2 block text-sm text-red-600"></span>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="mt-4 ap-form-actions">
-                <button class="btn ap-btn-primary" type="submit">İlanı Yayınla</button>
-                <a asp-action="MyListings" class="btn ap-btn-outline">İptal</a>
-            </div>
-        </form>
-    </div>
+            <section class="listing-glass-card rounded-[32px] p-5 md:p-8">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight">Görsel Yükle</h2>
+                        <p class="mt-1 text-sm text-slate-500">En fazla 6 fotoğraf, her biri en fazla 5 MB. JPG, PNG ve WEBP desteklenir.</p>
+                    </div>
+                </div>
 
-    <div class="col-xl-4">
-        <div class="ap-form-side mb-3">
-            <h2 class="ap-form-side-title">Hızlı Kontrol Listesi</h2>
-            <ul class="mb-0 ps-3 text-muted">
-                <li>Başlığı net ve kısa yaz.</li>
-                <li>Açıklamada ürün durumu ve beden bilgisini belirt.</li>
-                <li>Son tarihi gerçekçi girerek talepleri hızlandır.</li>
-                <li>Konumu doğru seçerek uygun eşleşme yakala.</li>
-            </ul>
+                <div id="listing-dropzone" class="listing-dropzone mt-5 cursor-pointer rounded-[24px] px-4 py-12 text-center">
+                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#0d6c52]/10">
+                        <span class="material-symbols-outlined text-[32px] text-[#00523d]">cloud_upload</span>
+                    </div>
+                    <p class="mt-4 text-sm font-bold text-slate-800">Tıklayın veya görselleri sürükleyin</p>
+                    <p class="mt-2 text-xs text-slate-500">PNG, JPG, WEBP (Maks. 5 MB)</p>
+                    <p class="mt-2 text-xs text-slate-500">Yeni seçimler mevcut görsellerin üstüne eklenir.</p>
+                    <input asp-for="Photos"
+                           id="fileInput"
+                           class="hidden"
+                           type="file"
+                           multiple
+                           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                </div>
+                <span asp-validation-for="Photos" class="mt-3 block text-sm text-red-600"></span>
+
+                <div id="preview-grid" class="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-5"></div>
+            </section>
         </div>
 
-        <div class="ap-form-side">
-            <h2 class="ap-form-side-title">Öneri</h2>
-            <p class="mb-0 text-muted">Fotoğrafı gün ışığında çekmek ve ürünün tamamını göstermek, talep alma oranını artırır.</p>
-        </div>
-    </div>
+        <aside class="xl:col-span-4 space-y-6">
+            <section class="listing-glass-card rounded-[32px] p-5 md:p-6">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <h2 class="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">İlan Özeti</h2>
+                    <span class="rounded-full bg-[#91f3c5]/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#00523d]">Taslak</span>
+                </div>
+                <div class="listing-summary-image relative mb-4 aspect-video overflow-hidden rounded-[24px] bg-[#ece9dd]">
+                    <img id="summary-image"
+                         src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80"
+                         alt="İlan önizleme görseli"
+                         class="h-full w-full object-cover opacity-40 grayscale transition duration-500" />
+                    <div id="summary-empty-state" class="absolute inset-0 z-10 flex items-center justify-center text-sm font-medium text-slate-500">
+                        Henüz görsel yok
+                    </div>
+                </div>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between border-b border-black/5 py-2">
+                        <span class="text-slate-500">Oluşturan:</span>
+                        <span class="font-semibold text-slate-800">Belediye Admin</span>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-black/5 py-2">
+                        <span class="text-slate-500">Tarih:</span>
+                        <span class="font-semibold text-slate-800">@todayLabel</span>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-black/5 py-2">
+                        <span class="text-slate-500">Dağıtım:</span>
+                        <span class="font-semibold text-slate-800">Belediye koordinasyonunda</span>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <span class="text-slate-500">Erişim:</span>
+                        <span class="font-bold text-[#00523d]">Herkese Açık</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="listing-glass-card rounded-[32px] p-5 md:p-6">
+                <div class="mb-4 flex items-center gap-2 text-[#00523d]">
+                    <span class="material-symbols-outlined">fact_check</span>
+                    <h2 class="text-2xl font-bold tracking-tight">Hızlı Kontrol</h2>
+                </div>
+                <ul class="space-y-3 text-sm text-slate-600">
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-[#00523d]">check_circle</span>
+                        <span>Anlaşılır ve kısa bir başlık</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-slate-400">radio_button_unchecked</span>
+                        <span>Doğru beden, cinsiyet ve yaş grubu bilgisi</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-slate-400">radio_button_unchecked</span>
+                        <span>Dağıtım için net açıklama ve not</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-slate-400">radio_button_unchecked</span>
+                        <span>Net, aydınlık ve ürünü tam gösteren görseller</span>
+                    </li>
+                </ul>
+            </section>
+        </aside>
+    </form>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const dropzone = document.getElementById("listing-dropzone");
+            const fileInput = document.getElementById("fileInput");
+            const previewGrid = document.getElementById("preview-grid");
+            const summaryImage = document.getElementById("summary-image");
+            const summaryEmptyState = document.getElementById("summary-empty-state");
+            const inputWrappers = document.querySelectorAll(".listing-input-wrap");
+            const selectedFiles = [];
+
+            if (!dropzone || !fileInput || !previewGrid || !summaryImage || !summaryEmptyState) {
+                return;
+            }
+
+            dropzone.addEventListener("click", () => fileInput.click());
+
+            ["dragenter", "dragover"].forEach((eventName) => {
+                dropzone.addEventListener(eventName, (event) => {
+                    event.preventDefault();
+                    dropzone.classList.add("is-active");
+                });
+            });
+
+            ["dragleave", "drop"].forEach((eventName) => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.classList.remove("is-active");
+                });
+            });
+
+            dropzone.addEventListener("drop", (event) => {
+                event.preventDefault();
+                if (event.dataTransfer?.files?.length) {
+                    appendFiles(event.dataTransfer.files);
+                }
+            });
+
+            fileInput.addEventListener("change", (event) => {
+                const target = event.target;
+                if (target instanceof HTMLInputElement && target.files) {
+                    appendFiles(target.files);
+                    target.value = "";
+                }
+            });
+
+            inputWrappers.forEach((wrapper) => {
+                const field = wrapper.querySelector("input, select, textarea");
+                if (!field) {
+                    return;
+                }
+
+                field.addEventListener("focus", () => wrapper.classList.add("is-focused"));
+                field.addEventListener("blur", () => wrapper.classList.remove("is-focused"));
+            });
+
+            function appendFiles(files) {
+                const incoming = Array.from(files).filter((file) => file.type.startsWith("image/"));
+                if (!incoming.length) {
+                    return;
+                }
+
+                incoming.forEach((file) => {
+                    const duplicate = selectedFiles.some((existing) =>
+                        existing.name === file.name &&
+                        existing.size === file.size &&
+                        existing.lastModified === file.lastModified);
+
+                    if (!duplicate && selectedFiles.length < 6) {
+                        selectedFiles.push(file);
+                    }
+                });
+
+                syncInputFiles();
+                renderPreviews();
+            }
+
+            function syncInputFiles() {
+                const dataTransfer = new DataTransfer();
+                selectedFiles.forEach((file) => dataTransfer.items.add(file));
+                fileInput.files = dataTransfer.files;
+            }
+
+            function renderPreviews() {
+                previewGrid.innerHTML = "";
+
+                if (!selectedFiles.length) {
+                    resetSummary();
+                    return;
+                }
+
+                selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (loadEvent) => {
+                        const result = loadEvent.target?.result;
+                        if (typeof result !== "string") {
+                            return;
+                        }
+
+                        if (index === 0) {
+                            summaryImage.src = result;
+                            summaryImage.classList.remove("opacity-40", "grayscale");
+                            summaryEmptyState.classList.add("hidden");
+                        }
+
+                        const tile = document.createElement("div");
+                        tile.className = "listing-preview-tile relative aspect-square overflow-hidden rounded-[20px] border border-black/10 bg-white";
+                        tile.innerHTML = `
+                            <img src="${result}" alt="${escapeHtml(file.name)}" class="h-full w-full object-cover" />
+                            <button type="button" class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white shadow">
+                                <span class="material-symbols-outlined text-[16px]">close</span>
+                            </button>
+                        `;
+
+                        tile.querySelector("button")?.addEventListener("click", () => {
+                            removeFile(file);
+                        });
+
+                        previewGrid.appendChild(tile);
+                    };
+
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function removeFile(file) {
+                const index = selectedFiles.findIndex((item) =>
+                    item.name === file.name &&
+                    item.size === file.size &&
+                    item.lastModified === file.lastModified);
+
+                if (index === -1) {
+                    return;
+                }
+
+                selectedFiles.splice(index, 1);
+                syncInputFiles();
+                renderPreviews();
+            }
+
+            function resetSummary() {
+                summaryImage.src = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80";
+                summaryImage.classList.add("opacity-40", "grayscale");
+                summaryEmptyState.classList.remove("hidden");
+            }
+
+            function escapeHtml(value) {
+                return value
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#39;");
+            }
+        })();
+    </script>
 }
-
-

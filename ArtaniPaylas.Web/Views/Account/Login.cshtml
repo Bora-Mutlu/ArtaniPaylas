@@ -1,94 +1,443 @@
-﻿@model ArtaniPaylas.Core.ViewModels.LoginViewModel
-
+@model AccountAuthViewModel
 @{
-    ViewData["Title"] = "Giriş Yap";
+    Layout = null;
+    ViewData["Title"] = "Giriş Yap ve Kayıt Ol";
+    var isRegisterActive = string.Equals(Model.ActivePanel, "register", StringComparison.OrdinalIgnoreCase);
+    var loginSummaryErrors = ViewData.ModelState
+        .Where(x => string.IsNullOrEmpty(x.Key) || x.Key.StartsWith("Login."))
+        .SelectMany(x => x.Value?.Errors ?? [])
+        .Select(x => x.ErrorMessage)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct()
+        .ToList();
+    var registerSummaryErrors = ViewData.ModelState
+        .Where(x => string.IsNullOrEmpty(x.Key) || x.Key.StartsWith("Register."))
+        .SelectMany(x => x.Value?.Errors ?? [])
+        .Select(x => x.ErrorMessage)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct()
+        .ToList();
 }
+<!DOCTYPE html>
+<html class="light" lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giriş Yap ve Kayıt Ol - Ayancık Belediyesi Dayanışma Sistemi</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-dim": "#dcdad4",
+                        "on-tertiary-fixed-variant": "#75322c",
+                        "on-surface-variant": "#3f4944",
+                        "surface": "#fbf9f3",
+                        "on-secondary-container": "#00714e",
+                        "primary-fixed": "#a0f3d2",
+                        "surface-container-highest": "#e4e2dd",
+                        "surface-tint": "#0b6b51",
+                        "on-primary-fixed": "#002116",
+                        "tertiary-fixed": "#ffdad5",
+                        "secondary-container": "#91f3c5",
+                        "inverse-surface": "#30312d",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#005137",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#85d6b6",
+                        "surface-container": "#f0eee8",
+                        "primary-container": "#0d6c52",
+                        "outline-variant": "#bec9c2",
+                        "surface-container-high": "#eae8e2",
+                        "secondary-fixed-dim": "#77d9ac",
+                        "on-secondary-fixed": "#002114",
+                        "inverse-on-surface": "#f3f1eb",
+                        "on-surface": "#1b1c18",
+                        "secondary": "#006c4b",
+                        "surface-variant": "#e4e2dd",
+                        "tertiary-container": "#934a42",
+                        "inverse-primary": "#85d6b6",
+                        "surface-bright": "#fbf9f3",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#94f6c7",
+                        "outline": "#6f7a74",
+                        "on-primary-fixed-variant": "#00513c",
+                        "on-tertiary-container": "#ffcfc9",
+                        "surface-container-low": "#f5f3ed",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c18",
+                        "on-tertiary-fixed": "#3c0806",
+                        "primary": "#00523d",
+                        "background": "#fbf9f3",
+                        "tertiary": "#76332c",
+                        "on-primary-container": "#98eac9",
+                        "tertiary-fixed-dim": "#ffb4aa"
+                    },
+                    spacing: {
+                        xl: "80px",
+                        base: "8px",
+                        "margin-mobile": "16px",
+                        md: "24px",
+                        lg: "48px",
+                        sm: "12px",
+                        "container-max": "1280px",
+                        xs: "4px",
+                        gutter: "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Space Grotesk", "sans-serif"],
+                        "display-lg": ["Space Grotesk", "sans-serif"],
+                        caption: ["Manrope", "sans-serif"],
+                        "body-md": ["Manrope", "sans-serif"],
+                        "body-lg": ["Manrope", "sans-serif"],
+                        "label-md": ["Manrope", "sans-serif"],
+                        "headline-md": ["Space Grotesk", "sans-serif"],
+                        "headline-lg-mobile": ["Space Grotesk", "sans-serif"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        caption: ["12px", { lineHeight: "16px", fontWeight: "500" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }]
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .auth-container.right-panel-active .sign-in-container {
+            transform: translateX(100%);
+            opacity: 0;
+            z-index: 1;
+        }
 
-<style>
-    .slide-in-left {
-        animation: slideInLeft 0.5s ease-out forwards;
-    }
-    .slide-in-right {
-        animation: slideInRight 0.5s ease-out forwards;
-    }
-    @@keyframes slideInLeft {
-        from { opacity: 0; transform: translateX(-30px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    @@keyframes slideInRight {
-        from { opacity: 0; transform: translateX(30px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    .ap-auth-visual {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-</style>
+        .auth-container.right-panel-active .sign-up-container {
+            transform: translateX(100%);
+            opacity: 1;
+            z-index: 5;
+            animation: show 0.6s;
+        }
 
-<section class="ap-auth-wrap">
-    <div class="container py-4 py-lg-5">
-        <div class="ap-auth-shell mx-auto">
-            <!-- GİRİŞ FORMU SOLDA -->
-            <div class="ap-auth-card p-4 p-md-5 slide-in-left">
-                <header class="ap-auth-header mb-4">
-                    <span class="ap-auth-eyebrow text-primary fw-bold">Oturum Açın</span>
-                    <h1 class="ap-auth-title h2 mb-2">Hoş Geldiniz</h1>
-                    <p class="text-muted mb-0">E-posta ve şifrenizle giriş yapın.</p>
-                </header>
+        .auth-container.right-panel-active .overlay-container {
+            transform: translateX(-100%);
+        }
 
-                <form method="post" asp-action="Login" asp-controller="Account" asp-route-returnUrl="@ViewData["ReturnUrl"]" novalidate id="loginForm">
+        .auth-container.right-panel-active .overlay {
+            transform: translateX(50%);
+        }
+
+        @@keyframes show {
+            0%, 49.99% { opacity: 0; z-index: 1; }
+            50%, 100% { opacity: 1; z-index: 5; }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #bec9c2;
+            border-radius: 10px;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+        }
+
+        .overlay-panel {
+            padding-inline: clamp(1.5rem, 4vw, 3rem);
+            overflow: hidden;
+        }
+
+        .overlay-left,
+        .overlay-right {
+            transform: none !important;
+        }
+
+        .overlay-panel .relative.z-10 {
+            max-width: 28rem;
+            margin-inline: auto;
+        }
+
+        .overlay-panel h1 {
+            font-size: clamp(2rem, 3.2vw, 3.15rem);
+            line-height: 1.05;
+            text-wrap: balance;
+        }
+
+        @@media (max-width: 1023px) {
+            .auth-container {
+                min-height: auto !important;
+                display: block !important;
+            }
+
+            .sign-in-container,
+            .sign-up-container,
+            .overlay-container {
+                position: relative !important;
+                width: 100% !important;
+                left: auto !important;
+                top: auto !important;
+                transform: none !important;
+                opacity: 1 !important;
+                min-height: auto !important;
+            }
+
+            .sign-up-container {
+                display: none;
+            }
+
+            .auth-container.right-panel-active .sign-in-container {
+                display: none;
+            }
+
+            .auth-container.right-panel-active .sign-up-container {
+                display: block;
+            }
+
+            .overlay-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-margin-mobile font-body-md text-on-surface md:p-lg">
+    <div class="absolute left-[-10%] top-[-10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-tertiary/5 blur-[120px]"></div>
+
+    <div id="authContainer" class="auth-container relative flex min-h-[650px] w-full max-w-[1000px] overflow-hidden rounded-[32px] bg-white shadow-[0_10px_30px_rgba(13,108,82,0.04)] @(isRegisterActive ? "right-panel-active" : string.Empty)">
+        <div class="sign-up-container absolute left-0 top-0 z-[1] h-full w-1/2 opacity-0 transition-all duration-700 ease-in-out">
+            <div class="custom-scrollbar flex h-full flex-col justify-center overflow-y-auto bg-white px-lg py-md">
+                <form asp-action="Register" asp-controller="Account" asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data" class="flex flex-col gap-sm">
                     @Html.AntiForgeryToken()
+                    <input asp-for="Register.ReturnUrl" type="hidden" />
 
-                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.TryGetValue(string.Empty, out var modelErrors) && modelErrors.Errors.Count > 0)
+                    <div class="mb-sm">
+                        <h2 class="mb-xs font-headline-md text-headline-md text-primary">Hesap Oluştur</h2>
+                        <p class="font-body-md text-on-surface-variant">Ayancık dayanışma ağının bir parçası olun.</p>
+                    </div>
+
+                    @if (isRegisterActive && registerSummaryErrors.Any())
                     {
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3" role="alert"></div>
+                        <div class="rounded-2xl border border-error/20 bg-error-container px-4 py-3 text-sm text-on-error-container">
+                            <ul class="list-disc space-y-1 pl-5">
+                                @foreach (var error in registerSummaryErrors)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        </div>
                     }
 
-                    <div class="ap-field mb-3">
-                        <label asp-for="Email" class="ap-field-label fw-bold small text-secondary">E-posta Adresi</label>
-                        <input asp-for="Email" type="email" class="form-control py-2" maxlength="120" autocomplete="email" placeholder="ornek@mail.com" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
-                    </div>
-
-                    <div class="ap-field mb-4">
-                        <label asp-for="Password" class="ap-field-label fw-bold small text-secondary">Şifre</label>
-                        <input asp-for="Password" type="password" class="form-control py-2" id="loginPassword" autocomplete="current-password" placeholder="Şifreniz" />
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
-
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <div class="form-check">
-                            <input asp-for="RememberMe" class="form-check-input shadow-none" type="checkbox" id="RememberMeCheck" />
-                            <label class="form-check-label user-select-none" for="RememberMeCheck">Beni hatırla</label>
+                    <div class="grid grid-cols-1 gap-sm md:grid-cols-2">
+                        <div class="space-y-1">
+                            <label asp-for="Register.FullName" class="px-xs text-caption font-label-md">Ad Soyad</label>
+                            <input asp-for="Register.FullName" class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-2 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="Ahmet Yılmaz" />
+                            <span asp-validation-for="Register.FullName" class="text-xs text-error"></span>
                         </div>
-                        <a asp-action="ForgotPassword" asp-controller="Account" class="small text-decoration-none">Şifrenizi mi unuttunuz?</a>
+                        <div class="space-y-1">
+                            <label asp-for="Register.Email" class="px-xs text-caption font-label-md">E-posta</label>
+                            <input asp-for="Register.Email" class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-2 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="ahmet@ornek.com" />
+                            <span asp-validation-for="Register.Email" class="text-xs text-error"></span>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold text-uppercase fs-6">Giriş Yap</button>
+                    <div class="grid grid-cols-1 gap-sm md:grid-cols-2">
+                        <div class="space-y-1">
+                            <label asp-for="Register.PhoneNumber" class="px-xs text-caption font-label-md">Telefon</label>
+                            <input asp-for="Register.PhoneNumber" class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-2 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="05xx xxx xx xx" />
+                            <span asp-validation-for="Register.PhoneNumber" class="text-xs text-error"></span>
+                        </div>
+                        <div class="space-y-1">
+                            <label asp-for="Register.Age" class="px-xs text-caption font-label-md">Yaş</label>
+                            <input asp-for="Register.Age" class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-2 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="25" />
+                            <span asp-validation-for="Register.Age" class="text-xs text-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label asp-for="Register.Location" class="px-xs text-caption font-label-md">Konum (Mahalle/Sokak)</label>
+                        <input asp-for="Register.Location" class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-2 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="Yalı Mah. Atatürk Cad." />
+                        <span asp-validation-for="Register.Location" class="text-xs text-error"></span>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label asp-for="Register.ProfileImageFile" class="px-xs text-caption font-label-md">Profil Fotoğrafı</label>
+                        <input asp-for="Register.ProfileImageFile" class="w-full text-caption text-on-surface-variant file:mr-4 file:rounded-full file:border-0 file:bg-primary-fixed file:px-4 file:py-2 file:text-sm file:font-semibold file:text-on-primary-fixed transition-all hover:file:bg-primary-fixed-dim" />
+                        <span asp-validation-for="Register.ProfileImageFile" class="text-xs text-error"></span>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-sm md:grid-cols-2">
+                        <div class="space-y-1">
+                            <label asp-for="Register.Password" class="px-xs text-caption font-label-md">Şifre</label>
+                            <input asp-for="Register.Password" class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-2 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="••••••••" />
+                            <span asp-validation-for="Register.Password" class="text-xs text-error"></span>
+                        </div>
+                        <div class="space-y-1">
+                            <label asp-for="Register.ConfirmPassword" class="px-xs text-caption font-label-md">Şifre Tekrar</label>
+                            <input asp-for="Register.ConfirmPassword" class="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-2 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="••••••••" />
+                            <span asp-validation-for="Register.ConfirmPassword" class="text-xs text-error"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="mt-md w-full rounded-full bg-primary py-3 font-label-md text-white transition-all hover:shadow-lg active:scale-95">Kayıt Ol</button>
                 </form>
             </div>
-            
-            <!-- KAYIT BİLGİ PANELİ SAĞDA -->
-            <aside class="ap-auth-visual slide-in-right text-center" aria-hidden="true">
-                <span class="ap-auth-eyebrow text-uppercase fw-bold text-success d-inline-block mb-2">Artanı Paylaş</span>
-                <h2 class="ap-auth-visual-title h2 text-dark mt-3">Yeni misiniz?</h2>
-                <p class="ap-auth-visual-text text-secondary mt-3 mb-4">Giysi israfını önlemek ve topluluğa destek olmak için hemen bir hesap oluşturun.</p>
-                
-                <div class="mt-2 text-center">
-                    <p class="mb-3 small text-dark fw-bold">Hesabınız yok mu?</p>
-                    <a href="/Account/Register?returnUrl=@Model.ReturnUrl" class="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm">Kayıt Ol</a>
+        </div>
+
+        <div class="sign-in-container absolute left-0 top-0 z-[2] h-full w-1/2 transition-all duration-700 ease-in-out">
+            <div class="flex h-full flex-col justify-center bg-white px-lg py-md">
+                <form asp-action="Login" asp-controller="Account" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="flex flex-col gap-md">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="Login.ReturnUrl" type="hidden" />
+
+                    <div>
+                        <div class="mb-xs flex items-center gap-2">
+                            <span class="material-symbols-outlined text-display-lg text-primary" style="font-variation-settings:'FILL' 1;">eco</span>
+                            <h2 class="font-headline-md text-headline-md text-primary">Hoş Geldiniz</h2>
+                        </div>
+                        <p class="font-body-md text-on-surface-variant">Ayancık Belediyesi Dayanışma Sistemine giriş yapın.</p>
+                    </div>
+
+                    @if (!isRegisterActive && loginSummaryErrors.Any())
+                    {
+                        <div class="rounded-2xl border border-error/20 bg-error-container px-4 py-3 text-sm text-on-error-container">
+                            <ul class="list-disc space-y-1 pl-5">
+                                @foreach (var error in loginSummaryErrors)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (TempData["SuccessMessage"] is string successMessage)
+                    {
+                        <div class="rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm text-primary">@successMessage</div>
+                    }
+                    @if (TempData["ErrorMessage"] is string errorMessage)
+                    {
+                        <div class="rounded-2xl border border-error/20 bg-error-container px-4 py-3 text-sm text-on-error-container">@errorMessage</div>
+                    }
+
+                    <div class="space-y-4">
+                        <div class="space-y-1">
+                            <label asp-for="Login.Email" class="px-xs text-caption font-label-md">E-posta Adresi</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-outline">mail</span>
+                                <input asp-for="Login.Email" class="w-full rounded-xl border border-outline-variant bg-surface-container-low py-3 pl-12 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="ornek@ayancik.bel.tr" />
+                            </div>
+                            <span asp-validation-for="Login.Email" class="text-xs text-error"></span>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between px-xs">
+                                <label asp-for="Login.Password" class="text-caption font-label-md">Şifre</label>
+                                <a asp-action="ForgotPassword" asp-controller="Account" class="text-caption text-primary hover:underline">Şifremi Unuttum</a>
+                            </div>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-outline">lock</span>
+                                <input asp-for="Login.Password" class="w-full rounded-xl border border-outline-variant bg-surface-container-low py-3 pl-12 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary" placeholder="••••••••" />
+                            </div>
+                            <span asp-validation-for="Login.Password" class="text-xs text-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 px-xs">
+                        <input asp-for="Login.RememberMe" class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary" />
+                        <label asp-for="Login.RememberMe" class="cursor-pointer text-caption text-on-surface-variant">Beni Hatırla</label>
+                    </div>
+
+                    <button type="submit" class="w-full rounded-full bg-primary py-4 font-label-md text-white shadow-[0_4px_12px_rgba(13,108,82,0.2)] transition-all hover:shadow-[0_8px_24px_rgba(13,108,82,0.3)] active:scale-[0.98]">Giriş Yap</button>
+
+
+                </form>
+            </div>
+        </div>
+
+        <div class="overlay-container absolute left-1/2 top-0 z-[100] h-full w-1/2 overflow-hidden transition-transform duration-700 ease-in-out">
+            <div class="overlay relative -left-full h-full w-[200%] translate-x-0 transform bg-primary-container text-white transition-transform duration-700 ease-in-out">
+                <div class="overlay-panel overlay-left absolute left-0 top-0 flex h-full w-1/2 flex-col items-center justify-center px-lg text-center transition-transform duration-700 ease-in-out">
+                    <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-20">
+                        <img class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_eEAtxlzVfiELUxmCaMziPSPZ3HOJshfsy76AAsRycOPp_h-Vd5ZwySZJCYPcFqXQVRVS0abwF49_50OQdK6YjafrIPDDlHe1nwH3_L2heKkLZbwQYZnDbGxzU_72iodJpHghxZR4q6PcsIav4nuBnfNekr6Be2NfnnME0PY6Vr4cTP3qqxr3gynbZTZ8IUtZ1nvKLPdO5DM70YcexeS2yy6g8hu5DslZogyUXdEjmiAOcwDYN_zKtnEviU6b1aStezqa8HrBqBs" alt="" />
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary to-secondary mix-blend-multiply"></div>
+                    </div>
+                    <div class="relative z-10">
+                        <h1 class="mb-md font-display-lg text-headline-lg">Zaten hesabın var mı?</h1>
+                        <p class="mx-auto mb-lg max-w-xs font-body-md text-primary-fixed">Dayanışma ağımıza geri dönmek ve topluluğa katkı sağlamaya devam etmek için giriş yapın.</p>
+                        <button id="signIn" type="button" class="rounded-full border-2 border-white bg-transparent px-xl py-3 font-label-md text-white transition-all hover:bg-white hover:text-primary">GİRİŞ YAP</button>
+                    </div>
                 </div>
-            </aside>
+
+                <div class="overlay-panel overlay-right absolute right-0 top-0 flex h-full w-1/2 flex-col items-center justify-center px-lg text-center transition-transform duration-700 ease-in-out">
+                    <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-20">
+                        <img class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTsdAwiknBUzQhUi_FhLKDyHLKuT2qYXB0Z0pY_2_N_P1lBngbvsH3vMBZXBPLTl7dI1iXrj1M1L82TbUIdAeDv4PzqQ4zuicnuPlSR8WMB_0Anz791cve6Ox-aTkLpV28yaMtasWIuRE6zqR91V3Cr8p1OXEOrpL-MTz5JIFbmUncH2ezVHeRowSkXJS6tMIDz5wfIgbyS024f0aqfuCbrggx8J90wbjWLYYIS4SVGGYUuIPtInFGt4gCfGFel9mZ0kY8w_S24T0" alt="" />
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary to-secondary mix-blend-multiply"></div>
+                    </div>
+                    <div class="relative z-10">
+                        <h1 class="mb-md font-display-lg text-headline-lg">Yeni misiniz?</h1>
+                        <p class="mx-auto mb-lg max-w-xs font-body-md text-primary-fixed">Kayıt olun ve ihtiyacı olan komşularımızla paylaşmanın mutluluğunu yaşayın. Dayanışma bizi güçlendirir.</p>
+                        <button id="signUp" type="button" class="rounded-full border-2 border-white bg-transparent px-xl py-3 font-label-md text-white transition-all hover:bg-white hover:text-primary">KAYIT OL</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</section>
 
-@section Scripts {
+    <a asp-controller="Home" asp-action="Index" class="fixed bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-2 text-on-surface-variant transition-colors hover:text-primary">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span class="font-label-md">Ana Sayfaya Dön</span>
+    </a>
+
+    <script>
+        const signUpButton = document.getElementById("signUp");
+        const signInButton = document.getElementById("signIn");
+        const container = document.getElementById("authContainer");
+
+        signUpButton?.addEventListener("click", () => {
+            container?.classList.add("right-panel-active");
+        });
+
+        signInButton?.addEventListener("click", () => {
+            container?.classList.remove("right-panel-active");
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+
+            const blobs = document.querySelectorAll(".bg-primary\\/5, .bg-tertiary\\/5");
+            blobs.forEach((blob, index) => {
+                const speed = (index + 1) * 20;
+                blob.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
     <partial name="_ValidationScriptsPartial" />
-    
-}
-
-
-
-
+</body>
+</html>

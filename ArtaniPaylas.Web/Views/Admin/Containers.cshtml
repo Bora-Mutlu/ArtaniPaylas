@@ -1,0 +1,483 @@
+@model AdminContainersViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Konteyner Yönetimi";
+    Layout = "_AdminLayout";
+    var existingJson = JsonSerializer.Serialize(Model.Containers.Select(x => new
+    {
+        x.Id,
+        x.Name,
+        x.District,
+        x.Address,
+        x.Latitude,
+        x.Longitude,
+        x.IsActive
+    }));
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+<style>
+    .ay-admin-map-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .ay-admin-map-card {
+        border-radius: 28px;
+        border: 1px solid rgba(24, 38, 31, 0.08);
+        background: rgba(255, 253, 248, 0.92);
+        box-shadow: 0 14px 30px rgba(24, 38, 31, 0.08);
+        padding: 1.1rem;
+    }
+
+    .ay-admin-map-kicker {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .18em;
+        color: #64748b;
+        margin-bottom: .45rem;
+    }
+
+    .ay-admin-map-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -.04em;
+        line-height: 1.05;
+        margin-bottom: .4rem;
+    }
+
+    .ay-admin-map-copy {
+        color: #556372;
+        margin-bottom: .85rem;
+        max-width: 58ch;
+        font-size: .95rem;
+    }
+
+    .ay-admin-map-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .55rem;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: .75rem;
+    }
+
+    .ay-admin-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: .48rem .78rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .ay-admin-chip-brand {
+        background: #dcf3e6;
+        color: #0f6b53;
+    }
+
+    .ay-admin-chip-muted {
+        background: #eef2f1;
+        color: #4b5b55;
+    }
+
+    .ay-admin-map-note {
+        margin: 0;
+        font-size: .88rem;
+        color: #556372;
+    }
+
+    .ay-admin-map-note.error {
+        color: #b42318;
+    }
+
+    .ay-admin-map-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: .9rem;
+        align-items: start;
+    }
+
+    #adminContainerMap {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        border: 1px solid rgba(24, 38, 31, 0.08);
+        background: #f3f4f6;
+    }
+
+    .ay-admin-map-aside {
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+    }
+
+    .ay-admin-mini-card {
+        border-radius: 18px;
+        border: 1px solid rgba(24, 38, 31, 0.07);
+        background: #f8faf9;
+        padding: .9rem;
+    }
+
+    .ay-admin-mini-card h3 {
+        margin: 0 0 .45rem;
+        font-size: .95rem;
+        font-weight: 800;
+        color: #17231c;
+    }
+
+    .ay-admin-mini-card p,
+    .ay-admin-mini-card li {
+        color: #556372;
+        font-size: .86rem;
+    }
+
+    .ay-admin-mini-card ul {
+        margin: 0;
+        padding-left: 1rem;
+    }
+
+    .ay-admin-form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .65rem;
+    }
+
+    .ay-admin-form-grid input {
+        min-height: 42px;
+    }
+
+    .ay-admin-list {
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+        max-height: 640px;
+        overflow: auto;
+        padding-right: .2rem;
+    }
+
+    .ay-admin-list article {
+        border-radius: 20px;
+        border: 1px solid rgba(24, 38, 31, 0.06);
+        background: #f8faf9;
+        padding: .9rem;
+    }
+
+    .ay-admin-empty {
+        border-radius: 18px;
+        border: 1px dashed rgba(24, 38, 31, 0.12);
+        background: #f8faf9;
+        padding: 1rem;
+        color: #556372;
+        text-align: center;
+    }
+
+    @@media (max-width: 1399px) {
+        .ay-admin-map-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .ay-admin-map-aside {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 1199px) {
+        .ay-admin-map-shell {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .ay-admin-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .ay-admin-map-aside {
+            grid-template-columns: 1fr;
+        }
+
+        #adminContainerMap {
+            height: 380px;
+        }
+    }
+</style>
+
+<div class="ay-admin-map-shell">
+    <section class="ay-admin-map-card">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+                <div class="ay-admin-map-kicker">Harita seçimi</div>
+                <h1 class="ay-admin-map-title">Ayancık sınırları içinde konteyner noktalarını yerleştir</h1>
+                <p class="ay-admin-map-copy">Sınır verisi sadeleştirilmiş halde sayfaya gömülü geliyor. Bu yüzden harita daha hızlı açılır ve seçim akışı gecikmeden çalışır.</p>
+            </div>
+            <span id="selectedPointCount" class="ay-admin-chip ay-admin-chip-brand">0 nokta seçildi</span>
+        </div>
+
+        <div class="ay-admin-map-toolbar">
+            <div class="d-flex flex-wrap gap-2">
+                <span class="ay-admin-chip ay-admin-chip-brand">Ayancık ilçe sınırı</span>
+                <span class="ay-admin-chip ay-admin-chip-muted">Sınır dışı seçim engellenir</span>
+            </div>
+            <p id="mapSelectionMessage" class="ay-admin-map-note">Harita hazırlanıyor...</p>
+        </div>
+
+        <div class="ay-admin-map-layout">
+            <div id="adminContainerMap"></div>
+            <aside class="ay-admin-map-aside">
+                <div class="ay-admin-mini-card">
+                    <h3>Hızlı kullanım</h3>
+                    <ul>
+                        <li>Haritada bir noktaya tıklayın.</li>
+                        <li>İşaretçiye tekrar tıklayarak kaldırın.</li>
+                        <li>Toplu seçim sonrası isim ve mahalle girin.</li>
+                    </ul>
+                </div>
+                <div class="ay-admin-mini-card">
+                    <h3>Durum</h3>
+                    <p class="mb-2"><strong>@Model.Containers.Count</strong> kayıtlı konteyner</p>
+                    <p class="mb-0"><strong>@Model.Containers.Count(x => x.IsActive)</strong> aktif nokta</p>
+                </div>
+            </aside>
+        </div>
+
+        <form asp-action="CreateContainers" method="post" class="mt-3 space-y-3">
+            @Html.AntiForgeryToken()
+            <div class="ay-admin-form-grid">
+                <input name="containerName" class="rounded-4 border-black/10" placeholder="Konteyner grubu adı" required />
+                <input name="district" class="rounded-4 border-black/10" placeholder="Mahalle veya bölge" />
+                <input name="address" class="rounded-4 border-black/10" placeholder="Adres notu" />
+            </div>
+            <input type="hidden" id="pointsJson" name="pointsJson" />
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn ap-btn-primary">Seçili Noktaları Kaydet</button>
+                <button type="button" id="clearDraftPoints" class="btn ap-btn-outline">Seçimi Temizle</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="ay-admin-map-card">
+        <div class="ay-admin-map-kicker">Kayıt listesi</div>
+        <h2 class="font-headline text-2xl font-bold mb-4">Mevcut konteynerler</h2>
+        @if (Model.Containers.Count == 0)
+        {
+            <div class="ay-admin-empty">Henüz kayıtlı konteyner yok. Haritadan ilk noktaları seçip kaydettiğinizde burada listelenecek.</div>
+        }
+        else
+        {
+            <div class="ay-admin-list">
+                @foreach (var container in Model.Containers)
+                {
+                    <article>
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                            <div>
+                                <div class="fw-bold">@container.Name</div>
+                                <div class="small text-muted">@(container.District ?? "Bölge belirtilmedi")</div>
+                            </div>
+                            <span class="badge rounded-pill @(container.IsActive ? "text-bg-success" : "text-bg-secondary") px-3 py-2">@(container.IsActive ? "Aktif" : "Pasif")</span>
+                        </div>
+                        <div class="small text-muted mb-3">@container.Latitude.ToString("F5"), @container.Longitude.ToString("F5")</div>
+                        @if (!string.IsNullOrWhiteSpace(container.Address))
+                        {
+                            <div class="small mb-3">@container.Address</div>
+                        }
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form asp-action="ToggleContainerStatus" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@container.Id" />
+                                <button type="submit" class="btn ap-btn-outline btn-sm">@(container.IsActive ? "Pasife Al" : "Aktifleştir")</button>
+                            </form>
+                            <form asp-action="DeleteContainer" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@container.Id" />
+                                <button type="submit" class="btn btn-danger btn-sm">Sil</button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const pointsInput = document.getElementById("pointsJson");
+            const clearButton = document.getElementById("clearDraftPoints");
+            const countBadge = document.getElementById("selectedPointCount");
+            const messageNode = document.getElementById("mapSelectionMessage");
+
+            function setMessage(text, isError) {
+                if (messageNode) {
+                    messageNode.textContent = text;
+                    messageNode.classList.toggle("error", Boolean(isError));
+                }
+            }
+
+            if (typeof L === "undefined") {
+                setMessage("Harita kütüphanesi yüklenemedi. Sayfayı yenileyip tekrar deneyin.", true);
+                return;
+            }
+
+            const existingContainers = @Html.Raw(existingJson);
+            const boundaryGeoJson = @Html.Raw(Model.BoundaryGeoJson);
+            const map = L.map("adminContainerMap", {
+                zoomControl: true,
+                scrollWheelZoom: true
+            }).setView([41.9458, 34.5862], 11);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: "&copy; OpenStreetMap"
+            }).addTo(map);
+
+            const draftMarkers = [];
+            const existingBounds = [];
+            const districtGeometry = boundaryGeoJson && boundaryGeoJson.geometry ? boundaryGeoJson.geometry : null;
+
+            function syncDraftPoints() {
+                const payload = draftMarkers.map(function (marker, index) {
+                    const latLng = marker.getLatLng();
+                    return { Index: index, Latitude: Number(latLng.lat.toFixed(6)), Longitude: Number(latLng.lng.toFixed(6)) };
+                });
+
+                if (pointsInput) {
+                    pointsInput.value = JSON.stringify(payload);
+                }
+
+                if (countBadge) {
+                    countBadge.textContent = `${payload.length} nokta seçildi`;
+                }
+            }
+
+            function isPointInsideRing(lat, lng, ring) {
+                let inside = false;
+                for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                    const xi = ring[i][0];
+                    const yi = ring[i][1];
+                    const xj = ring[j][0];
+                    const yj = ring[j][1];
+                    const intersect = ((yi > lat) !== (yj > lat))
+                        && (lng < ((xj - xi) * (lat - yi)) / ((yj - yi) || Number.EPSILON) + xi);
+
+                    if (intersect) {
+                        inside = !inside;
+                    }
+                }
+
+                return inside;
+            }
+
+            function isPointInPolygon(lat, lng, polygon) {
+                if (!polygon.length || !isPointInsideRing(lat, lng, polygon[0])) {
+                    return false;
+                }
+
+                for (let i = 1; i < polygon.length; i++) {
+                    if (isPointInsideRing(lat, lng, polygon[i])) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            function isPointInGeometry(lat, lng, geometry) {
+                if (!geometry) {
+                    return true;
+                }
+
+                if (geometry.type === "Polygon") {
+                    return isPointInPolygon(lat, lng, geometry.coordinates);
+                }
+
+                if (geometry.type === "MultiPolygon") {
+                    return geometry.coordinates.some(function (polygon) {
+                        return isPointInPolygon(lat, lng, polygon);
+                    });
+                }
+
+                return false;
+            }
+
+            existingContainers.forEach(function (item) {
+                L.circleMarker([item.Latitude, item.Longitude], {
+                    radius: 7,
+                    color: item.IsActive ? "#0f6b53" : "#64748b",
+                    fillColor: item.IsActive ? "#0f6b53" : "#64748b",
+                    fillOpacity: 0.92,
+                    weight: 2
+                }).addTo(map).bindPopup(`<strong>${item.Name}</strong><br>${item.District ?? ""}<br><small>${item.Address ?? ""}</small>`);
+
+                existingBounds.push([item.Latitude, item.Longitude]);
+            });
+
+            if (districtGeometry) {
+                const districtLayer = L.geoJSON(boundaryGeoJson, {
+                    style: function () {
+                        return {
+                            color: "#0f6b53",
+                            weight: 2.5,
+                            opacity: 0.92,
+                            fillColor: "#2a8d66",
+                            fillOpacity: 0.08
+                        };
+                    }
+                }).addTo(map);
+
+                map.fitBounds(districtLayer.getBounds(), { padding: [16, 16] });
+                setMessage("Harita hazır. Ayancık sınırı yüklendi ve seçim yapılabilir.", false);
+            } else if (existingBounds.length) {
+                map.fitBounds(existingBounds, { padding: [24, 24] });
+                setMessage("Sınır verisi bulunamadı. Harita mevcut kayıtlarla açıldı.", true);
+            } else {
+                setMessage("Sınır verisi bulunamadı. Harita varsayılan merkezle açıldı.", true);
+            }
+
+            map.on("click", function (event) {
+                const lat = event.latlng.lat;
+                const lng = event.latlng.lng;
+
+                if (!isPointInGeometry(lat, lng, districtGeometry)) {
+                    setMessage("Bu nokta Ayancık ilçe sınırları dışında kalıyor. Lütfen sınır içinden seçim yapın.", true);
+                    return;
+                }
+
+                const marker = L.marker(event.latlng).addTo(map);
+                marker.on("click", function () {
+                    map.removeLayer(marker);
+                    const markerIndex = draftMarkers.indexOf(marker);
+                    if (markerIndex >= 0) {
+                        draftMarkers.splice(markerIndex, 1);
+                        syncDraftPoints();
+                    }
+                });
+
+                draftMarkers.push(marker);
+                syncDraftPoints();
+                setMessage("Yeni bir konteyner noktası seçildi. İşaretçiye tıklayarak kaldırabilirsiniz.", false);
+            });
+
+            clearButton?.addEventListener("click", function () {
+                draftMarkers.splice(0, draftMarkers.length).forEach(function (marker) {
+                    map.removeLayer(marker);
+                });
+                syncDraftPoints();
+                setMessage("Taslak seçimler temizlendi.", false);
+            });
+
+            syncDraftPoints();
+            setTimeout(function () {
+                map.invalidateSize();
+            }, 120);
+        });
+    </script>
+}

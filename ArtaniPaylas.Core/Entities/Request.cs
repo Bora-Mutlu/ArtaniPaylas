@@ -12,6 +12,16 @@ public class Request
     [Required]
     public string RequesterUserId { get; set; } = string.Empty;
 
+    public DateTime RequestedAppointmentAt { get; set; }
+
+    public DateTime? ConfirmedAppointmentAt { get; set; }
+
+    [StringLength(500)]
+    public string? RequesterNote { get; set; }
+
+    [StringLength(500)]
+    public string? MunicipalityNote { get; set; }
+
     public RequestStatus Status { get; set; } = RequestStatus.Pending;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

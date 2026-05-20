@@ -47,16 +47,16 @@ public class UserDashboardController : Controller
         var sevenDaysAgo = nowUtc.AddDays(-7);
 
         var activeListingsCount = await _context.Listings
-            .CountAsync(x => x.OwnerUserId == userId && x.Status == ListingStatus.Active);
+            .CountAsync(x => x.Status == ListingStatus.Active);
 
         var newListingsLast7Days = await _context.Listings
-            .CountAsync(x => x.OwnerUserId == userId && x.CreatedAt >= sevenDaysAgo);
+            .CountAsync(x => x.CreatedAt >= sevenDaysAgo);
 
         var incomingRequestsCount = await _context.Requests
-            .CountAsync(x => x.Listing != null && x.Listing.OwnerUserId == userId);
+            .CountAsync(x => x.RequesterUserId == userId);
 
         var pendingIncomingRequestsCount = await _context.Requests
-            .CountAsync(x => x.Listing != null && x.Listing.OwnerUserId == userId && x.Status == RequestStatus.Pending);
+            .CountAsync(x => x.RequesterUserId == userId && x.Status == RequestStatus.Pending);
 
         var totalOutgoingRequests = await _context.Requests
             .CountAsync(x => x.RequesterUserId == userId);
@@ -70,7 +70,7 @@ public class UserDashboardController : Controller
 
         var recentListingsData = await _context.Listings
             .AsNoTracking()
-            .Where(x => x.OwnerUserId == userId)
+            .Where(x => x.Status == ListingStatus.Active)
             .OrderByDescending(x => x.CreatedAt)
             .Take(5)
             .Select(x => new
@@ -100,15 +100,13 @@ public class UserDashboardController : Controller
 
         var pendingIncomingRequests = await _context.Requests
             .AsNoTracking()
-            .Where(x => x.Listing != null && x.Listing.OwnerUserId == userId && x.Status == RequestStatus.Pending)
+            .Where(x => x.RequesterUserId == userId && x.Status == RequestStatus.Pending)
             .OrderByDescending(x => x.CreatedAt)
             .Take(5)
             .Select(x => new
             {
                 x.Id,
-                RequesterName = x.RequesterUser != null
-                    ? (x.RequesterUser.FullName ?? x.RequesterUser.UserName ?? "Kullanıcı")
-                    : "Kullanıcı",
+                RequesterName = "Ayancık Belediyesi",
                 ListingTitle = x.Listing != null ? x.Listing.Title : "İlan",
                 x.CreatedAt
             })

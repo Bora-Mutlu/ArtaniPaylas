@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Helpers;
 using ArtaniPaylas.Core.Interfaces;
@@ -36,7 +36,7 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null, string? panel = null)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -56,22 +56,27 @@ public class AccountController : Controller
             return RedirectToAction("Index", "UserDashboard");
         }
 
-        ViewData["ReturnUrl"] = returnUrl;
-        return View(new LoginViewModel { ReturnUrl = returnUrl });
+        return RenderAuthPageAsync(
+            activePanel: string.Equals(panel, "register", StringComparison.OrdinalIgnoreCase) ? "register" : "login",
+            returnUrl: returnUrl,
+            loginModel: new LoginViewModel { ReturnUrl = returnUrl });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+    public async Task<IActionResult> Login([Bind(Prefix = "Login")] LoginViewModel model, string? returnUrl = null)
     {
-        ViewData["ReturnUrl"] = returnUrl ?? Url.Content("~/");
-        if (!ModelState.IsValid) return View(model);
+        returnUrl ??= model.ReturnUrl;
+        if (!ModelState.IsValid)
+        {
+            return RenderAuthPageAsync("login", returnUrl, loginModel: model);
+        }
 
         var loginUser = await _userManager.FindByEmailAsync(model.Email);
         if (loginUser != null && !loginUser.IsActive)
         {
             ModelState.AddModelError(string.Empty, "Hesabınız pasif durumdadır. Lütfen yönetici ile iletişime geçin.");
-            return View(model);
+            return RenderAuthPageAsync("login", returnUrl, loginModel: model);
         }
 
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
@@ -84,7 +89,7 @@ public class AccountController : Controller
             {
                 await _signInManager.SignOutAsync();
                 ModelState.AddModelError(string.Empty, "Hesabınız pasif durumdadır. Lütfen yönetici ile iletişime geçin.");
-                return View(model);
+                return RenderAuthPageAsync("login", returnUrl, loginModel: model);
             }
 
             if (user != null && !isAdmin && !user.EmailConfirmedAt.HasValue)
@@ -98,33 +103,41 @@ public class AccountController : Controller
             {
                 return RedirectToAction("Index", "Admin");
             }
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
             return RedirectToAction("Index", "UserDashboard");
         }
 
         ModelState.AddModelError(string.Empty, "Geçersiz giriş denemesi. Bilgilerinizi kontrol edip tekrar deneyin.");
-        return View(model);
+        return RenderAuthPageAsync("login", returnUrl, loginModel: model);
     }
 
     [HttpGet]
     public IActionResult Register(string? returnUrl = null)
     {
-        ViewData["ReturnUrl"] = returnUrl;
-        return View(new RegisterViewModel { ReturnUrl = returnUrl });
+        return RedirectToAction(nameof(Login), new { returnUrl, panel = "register" });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model, string? returnUrl = null)
+    public async Task<IActionResult> Register([Bind(Prefix = "Register")] RegisterViewModel model, string? returnUrl = null)
     {
-        ViewData["ReturnUrl"] = returnUrl ?? Url.Content("~/");
+        returnUrl ??= model.ReturnUrl;
 
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            return RenderAuthPageAsync("register", returnUrl, registerModel: model);
+        }
 
         var existing = await _userManager.FindByEmailAsync(model.Email);
         if (existing != null)
         {
             ModelState.AddModelError(string.Empty, "Bu e-posta adresi sistemde zaten kayıtlı.");
-            return View(model);
+            return RenderAuthPageAsync("register", returnUrl, registerModel: model);
         }
 
         string? finalImagePath = null;
@@ -134,7 +147,7 @@ public class AccountController : Controller
             if (!string.IsNullOrWhiteSpace(err))
             {
                 ModelState.AddModelError(string.Empty, err);
-                return View(model);
+                return RenderAuthPageAsync("register", returnUrl, registerModel: model);
             }
             finalImagePath = path;
         }
@@ -206,8 +219,9 @@ public class AccountController : Controller
         {
             ModelState.AddModelError(string.Empty, MapIdentityError(error));
         }
-        return View(model);
+        return RenderAuthPageAsync("register", returnUrl, registerModel: model);
     }
+
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -492,5 +506,42 @@ public class AccountController : Controller
             : "ArtaniPaylas - E-posta Doğrulama";
 
         await _emailService.SendEmailAsync(user.Email!, subject, emailBody);
+    }
+
+    private IActionResult RenderAuthPageAsync(
+        string activePanel,
+        string? returnUrl,
+        LoginViewModel? loginModel = null,
+        RegisterViewModel? registerModel = null)
+    {
+        var effectiveReturnUrl = returnUrl ?? Url.Content("~/");
+
+        var viewModel = new AccountAuthViewModel
+        {
+            ActivePanel = activePanel,
+            ReturnUrl = effectiveReturnUrl,
+            Login = loginModel ?? new LoginViewModel(),
+            Register = registerModel ?? new RegisterViewModel()
+        };
+
+        viewModel.Login.ReturnUrl = effectiveReturnUrl;
+        viewModel.Register.ReturnUrl = effectiveReturnUrl;
+
+        return View("Login", viewModel);
+    }
+
+    private async Task<IActionResult> RedirectAfterSuccessfulSignInAsync(ApplicationUser user, string? returnUrl)
+    {
+        if (await _userManager.IsInRoleAsync(user, "Admin"))
+        {
+            return RedirectToAction("Index", "Admin");
+        }
+
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        return RedirectToAction("Index", "UserDashboard");
     }
 }

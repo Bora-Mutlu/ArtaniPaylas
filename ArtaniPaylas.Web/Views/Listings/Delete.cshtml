@@ -1,13 +1,13 @@
 ﻿@model Listing
 @{
     ViewData["Title"] = "İlan Sil";
-    Layout = "_UserLayout";
+    Layout = "_AdminLayout";
 }
 
 <section class="ap-page-head">
     <div>
         <h1 class="ap-title text-danger">İlanı Sil</h1>
-        <p class="ap-subtitle">Bu işlem geri alınamaz. Silmeden önce emin ol.</p>
+    <p class="ap-subtitle">Bu işlem geri alınamaz. Belediye ilanını silmeden önce emin olun.</p>
     </div>
 </section>
 
@@ -19,6 +19,6 @@
 <form asp-action="Delete" method="post" class="d-flex gap-2">
     <input type="hidden" asp-for="Id" />
     <button type="submit" class="btn btn-danger">Kalıcı Olarak Sil</button>
-    <a asp-action="MyListings" class="btn ap-btn-outline">Vazgeç</a>
+    <a asp-controller="Admin" asp-action="Listings" class="btn ap-btn-outline">Vazgeç</a>
 </form>
 

@@ -31,3 +31,125 @@ button:hover,.btn:hover{transform:translateY(-1px);}
 
 table{border-radius:12px;overflow:hidden;}
 thead th{background:var(--ad-soft);}
+
+.ap-page-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:1.5rem;
+}
+
+.ap-title{
+  margin:0;
+  font-family:"Space Grotesk",sans-serif;
+  font-size:clamp(1.8rem,2.8vw,2.6rem);
+  font-weight:700;
+  letter-spacing:-0.04em;
+  color:var(--ad-text);
+}
+
+.ap-subtitle{
+  margin:.35rem 0 0;
+  color:var(--ad-muted);
+  max-width:56ch;
+}
+
+.ap-form-shell,
+.ap-form-side,
+.ap-form-section{
+  background:rgba(255,255,255,.94);
+  border:1px solid var(--ad-border);
+  border-radius:24px;
+  box-shadow:0 16px 34px rgba(11,30,77,.06);
+}
+
+.ap-form-shell{
+  padding:1.5rem;
+}
+
+.ap-form-grid{
+  display:grid;
+  gap:1rem;
+}
+
+.ap-form-section{
+  padding:1.25rem;
+}
+
+.ap-form-section-title,
+.ap-form-side-title{
+  margin:0 0 1rem;
+  font-size:1rem;
+  font-weight:800;
+  color:var(--ad-text);
+}
+
+.ap-form-side{
+  padding:1.25rem;
+}
+
+.ap-form-actions{
+  display:flex;
+  gap:.75rem;
+  flex-wrap:wrap;
+}
+
+.ap-form-label{
+  color:var(--ad-text);
+  font-weight:700;
+}
+
+.ap-form-input{
+  border:1px solid var(--ad-border);
+  border-radius:16px;
+  min-height:48px;
+  padding:.75rem 1rem;
+  background:#fff;
+  color:var(--ad-text);
+}
+
+textarea.ap-form-input{
+  min-height:auto;
+}
+
+.ap-form-input:focus{
+  border-color:var(--ad-primary-2);
+  box-shadow:0 0 0 .2rem rgba(0,82,204,.12);
+}
+
+.ap-no-resize{
+  resize:none;
+}
+
+.ap-form-help,
+.ap-auth-alert,
+.form-text{
+  color:var(--ad-muted);
+}
+
+.ap-auth-alert:empty{
+  display:none;
+}
+
+.ap-upload-preview{
+  width:112px;
+  height:112px;
+  object-fit:cover;
+  border-radius:18px;
+  border:1px solid var(--ad-border);
+  box-shadow:0 10px 24px rgba(11,30,77,.08);
+}
+
+@media (max-width: 767px){
+  .ap-form-shell,
+  .ap-form-side,
+  .ap-form-section{
+    border-radius:20px;
+  }
+
+  .ap-form-shell{
+    padding:1rem;
+  }
+}

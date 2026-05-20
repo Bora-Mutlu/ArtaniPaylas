@@ -13,6 +13,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Listing> Listings => Set<Listing>();
 
+    public DbSet<ListingPhoto> ListingPhotos => Set<ListingPhoto>();
+
+    public DbSet<ContainerLocation> ContainerLocations => Set<ContainerLocation>();
+
     public DbSet<Request> Requests => Set<Request>();
 
     public DbSet<Review> Reviews => Set<Review>();
@@ -31,6 +35,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(x => x.Listings)
                 .HasForeignKey(x => x.OwnerUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(x => x.Photos)
+                .WithOne(x => x.Listing)
+                .HasForeignKey(x => x.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ListingPhoto>(entity =>
+        {
+            entity.HasIndex(x => x.ListingId);
         });
 
         builder.Entity<Request>(entity =>
@@ -44,6 +58,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(x => x.RequestsMade)
                 .HasForeignKey(x => x.RequesterUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.ListingId, x.RequesterUserId });
+        });
+
+        builder.Entity<ContainerLocation>(entity =>
+        {
+            entity.HasIndex(x => x.IsActive);
+            entity.HasIndex(x => x.District);
         });
 
         builder.Entity<Review>(entity =>

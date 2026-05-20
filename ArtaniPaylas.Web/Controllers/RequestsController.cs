@@ -1,12 +1,11 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Enums;
 using ArtaniPaylas.Core.Interfaces;
+using ArtaniPaylas.Core.ViewModels;
 using ArtaniPaylas.Data;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace ArtaniPaylas.Web.Controllers;
@@ -25,7 +24,7 @@ public class RequestsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(int listingId)
+    public async Task<IActionResult> Create(AppointmentCreateViewModel model)
     {
         var userId = GetCurrentUserId();
         if (userId is null)
@@ -33,17 +32,22 @@ public class RequestsController : Controller
             return Challenge();
         }
 
-        // Email verification check
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null || !user.EmailConfirmedAt.HasValue)
         {
-            TempData["ErrorMessage"] = "Talep göndermek için lütfen e-posta adresinizi doğrulayın.";
-            return RedirectToAction("Details", "Listings", new { id = listingId });
+            TempData["ErrorMessage"] = "Randevu oluşturmak için lütfen e-posta adresinizi doğrulayın.";
+            return RedirectToAction("Details", "Listings", new { id = model.ListingId });
+        }
+
+        if (model.RequestedAppointmentAt <= DateTime.Now)
+        {
+            TempData["ErrorMessage"] = "Lütfen ileri bir tarih ve saat seçin.";
+            return RedirectToAction("Details", "Listings", new { id = model.ListingId });
         }
 
         var listing = await _context.Listings
             .Include(x => x.Requests)
-            .FirstOrDefaultAsync(x => x.Id == listingId);
+            .FirstOrDefaultAsync(x => x.Id == model.ListingId);
 
         if (listing is null)
         {
@@ -52,48 +56,54 @@ public class RequestsController : Controller
 
         if (listing.OwnerUserId == userId)
         {
-            TempData["ErrorMessage"] = "Kendi ilanına talep gönderemezsin.";
-            return RedirectToAction("Details", "Listings", new { id = listingId });
+            TempData["ErrorMessage"] = "Kendi ilanın için randevu oluşturamazsın.";
+            return RedirectToAction("Details", "Listings", new { id = model.ListingId });
         }
 
         if (listing.Status != ListingStatus.Active)
         {
-            TempData["ErrorMessage"] = "Bu ilana talep alımı kapalı.";
-            return RedirectToAction("Details", "Listings", new { id = listingId });
+            TempData["ErrorMessage"] = "Bu ilan için randevu alımı kapalı.";
+            return RedirectToAction("Details", "Listings", new { id = model.ListingId });
         }
 
-        var existingRequest = listing.Requests.Any(x => x.RequesterUserId == userId && x.Status == RequestStatus.Pending);
-        if (existingRequest)
+        var hasOpenRequest = listing.Requests.Any(x =>
+            x.RequesterUserId == userId &&
+            x.Status != RequestStatus.Rejected &&
+            x.Status != RequestStatus.Delivered);
+
+        if (hasOpenRequest)
         {
-            TempData["ErrorMessage"] = "Bu ilan için zaten bekleyen bir talebin var.";
-            return RedirectToAction("Details", "Listings", new { id = listingId });
+            TempData["ErrorMessage"] = "Bu ilan için zaten açık bir randevu kaydın var.";
+            return RedirectToAction("Details", "Listings", new { id = model.ListingId });
         }
 
         var request = new Request
         {
             ListingId = listing.Id,
             RequesterUserId = userId,
+            RequestedAppointmentAt = DateTime.SpecifyKind(model.RequestedAppointmentAt, DateTimeKind.Local).ToUniversalTime(),
+            RequesterNote = NormalizeText(model.RequesterNote),
             Status = RequestStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.Requests.Add(request);
         await _context.SaveChangesAsync();
-        var requesterName = user.FullName ?? "Bir kullanıcı";
 
-        // Bildirim: Listing owner'ına talep geldi
+        var requesterName = user.FullName ?? "Bir kullanıcı";
         await _notificationService.CreateNotificationAsync(
             listing.OwnerUserId,
-            "Yeni Talep Geldi",
-            $"'{listing.Title}' ilanınız için {requesterName} tarafından talep alındı.",
-            Core.Enums.NotificationType.RequestReceived,
+            "İlanınız İçin Yeni Randevu Talebi",
+            $"'{listing.Title}' ilanı için {requesterName} randevu oluşturdu.",
+            NotificationType.RequestReceived,
             request.Id,
             "Request");
 
-        TempData["SuccessMessage"] = "Talebin gönderildi.";
+        TempData["SuccessMessage"] = "Randevu talebin belediye onayına gönderildi.";
         return RedirectToAction(nameof(Outgoing));
     }
 
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Incoming()
     {
         var userId = GetCurrentUserId();
@@ -130,6 +140,7 @@ public class RequestsController : Controller
         return View(requests);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Approve(int id)
@@ -137,6 +148,7 @@ public class RequestsController : Controller
         return await UpdateRequestStatusAsync(id, RequestStatus.Approved);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reject(int id)
@@ -144,6 +156,7 @@ public class RequestsController : Controller
         return await UpdateRequestStatusAsync(id, RequestStatus.Rejected);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkDelivered(int id)
@@ -175,34 +188,18 @@ public class RequestsController : Controller
 
         if (!IsValidRequestStatusTransition(request.Status, targetStatus))
         {
-            TempData["ErrorMessage"] = "Bu talep için geçersiz durum geçişi.";
+            TempData["ErrorMessage"] = "Bu randevu için geçersiz durum geçişi.";
             return RedirectToAction(nameof(Incoming));
         }
 
         request.Status = targetStatus;
         request.UpdatedAt = DateTime.UtcNow;
-
-        if (targetStatus is RequestStatus.Approved or RequestStatus.Delivered)
-        {
-            var otherPendingRequests = await _context.Requests
-                .Where(x => x.ListingId == request.ListingId && x.Id != request.Id && x.Status == RequestStatus.Pending)
-                .ToListAsync();
-
-            foreach (var pendingRequest in otherPendingRequests)
-            {
-                pendingRequest.Status = RequestStatus.Rejected;
-                pendingRequest.UpdatedAt = DateTime.UtcNow;
-            }
-
-            request.Listing.Status = ListingStatus.Completed;
-        }
+        request.ConfirmedAppointmentAt ??= request.RequestedAppointmentAt;
 
         await _context.SaveChangesAsync();
-
-        // Notification trigger - talep alan kişiye (requester)
         await TriggerNotificationAsync(request, targetStatus);
 
-        TempData["SuccessMessage"] = "Talep durumu güncellendi.";
+        TempData["SuccessMessage"] = "Randevu durumu güncellendi.";
         return RedirectToAction(nameof(Incoming));
     }
 
@@ -221,25 +218,18 @@ public class RequestsController : Controller
         };
     }
 
-    /// <summary>
-    /// Request status değişikliği için bildirim oluştur
-    /// </summary>
     private async Task TriggerNotificationAsync(Request request, RequestStatus targetStatus)
     {
         try
         {
-            var requesterUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.RequesterUserId);
-            if (requesterUser == null) return;
-
-            // Requester'a (talep gönderene) bildirim gönder
             switch (targetStatus)
             {
                 case RequestStatus.Approved:
                     await _notificationService.CreateNotificationAsync(
                         request.RequesterUserId,
-                        "Talebin Onaylandı! ✓",
-                        "Yeni talebin onaylandı. Öğeyi almaya hazır ol!",
-                        Core.Enums.NotificationType.RequestApproved,
+                        "Randevun Onaylandı",
+                        "Belediye hesabı randevu talebini onayladı.",
+                        NotificationType.RequestApproved,
                         request.Id,
                         "Request");
                     break;
@@ -247,9 +237,9 @@ public class RequestsController : Controller
                 case RequestStatus.Rejected:
                     await _notificationService.CreateNotificationAsync(
                         request.RequesterUserId,
-                        "Talebin Reddedildi",
-                        "Başka bir talebin kabul edildi. Başka ilanları deneyin.",
-                        Core.Enums.NotificationType.RequestRejected,
+                        "Randevu Talebin Reddedildi",
+                        "Seçtiğin saat aralığı uygun bulunmadı.",
+                        NotificationType.RequestRejected,
                         request.Id,
                         "Request");
                     break;
@@ -257,9 +247,9 @@ public class RequestsController : Controller
                 case RequestStatus.Delivered:
                     await _notificationService.CreateNotificationAsync(
                         request.RequesterUserId,
-                        "Ürün Teslim Edildi!",
-                        "Öğeyi aldığınızı teyit ettiniz. Teşekkür ederiz!",
-                        Core.Enums.NotificationType.ItemDelivered,
+                        "Randevu Süreci Tamamlandı",
+                        "Randevu kaydın tamamlandı olarak işaretlendi.",
+                        NotificationType.ItemDelivered,
                         request.Id,
                         "Request");
                     break;
@@ -267,9 +257,12 @@ public class RequestsController : Controller
         }
         catch (Exception ex)
         {
-            // Bildirim hatası olsa da devam et
             System.Diagnostics.Debug.WriteLine($"Notification error: {ex.Message}");
         }
     }
-}
 
+    private static string? NormalizeText(string? input)
+    {
+        return string.IsNullOrWhiteSpace(input) ? null : input.Trim();
+    }
+}

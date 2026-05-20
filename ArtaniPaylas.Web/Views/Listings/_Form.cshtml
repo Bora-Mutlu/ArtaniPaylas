@@ -1,48 +1,124 @@
-﻿@model ListingCreateEditViewModel
+@model ListingCreateEditViewModel
+@{
+    var showExistingPhotos = ViewData["ShowExistingPhotos"] as bool? ?? true;
+}
 
 <div class="ap-form-section">
     <div asp-validation-summary="ModelOnly" class="ap-auth-alert mb-3"></div>
 
     <div class="mb-3">
         <label asp-for="Title" class="form-label ap-form-label">Başlık</label>
-        <input asp-for="Title" class="form-control ap-form-input" placeholder="Örn: XL Beden Erkek Mont" />
-        <div class="form-text">Kısa ve anlaşılır bir başlık, ilanının daha hızlı bulunmasını sağlar.</div>
+        <input asp-for="Title" class="form-control ap-form-input" placeholder="Örn: Temiz çocuk montu" />
+        <div class="form-text">Kısa ve anlaşılır bir başlık, ilanın daha hızlı bulunmasını sağlar.</div>
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="Description" class="form-label ap-form-label">Açıklama</label>
-        <textarea asp-for="Description" class="form-control ap-form-input ap-no-resize" rows="5" placeholder="Kıyafet durumu, deformesi var mı, yaka/kol/beden ölçüsü vb. yazabilirsiniz."></textarea>
+        <textarea asp-for="Description" class="form-control ap-form-input ap-no-resize" rows="5" placeholder="Kıyafetin ölçüsü, yıpranma durumu, eksik parçası olup olmadığı ve teslim detaylarını yazın."></textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
     <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Category" class="form-label ap-form-label">Kategori</label>
+            <select asp-for="Category" class="form-select ap-form-input">
+                <option>Genel Giyim</option>
+                <option>Mont</option>
+                <option>Kazak</option>
+                <option>Tişört</option>
+                <option>Pantolon</option>
+                <option>Ayakkabı</option>
+                <option>Bebek Giyimi</option>
+                <option>Çocuk Giyimi</option>
+                <option>Aksesuar</option>
+            </select>
+            <span asp-validation-for="Category" class="text-danger"></span>
+        </div>
         <div class="col-md-6">
             <label asp-for="ExpirationDate" class="form-label ap-form-label">İlan Son Tarihi</label>
             <input asp-for="ExpirationDate" class="form-control ap-form-input" type="date" />
             <div class="form-text">Bu tarihten sonra ilan pasife alınır.</div>
             <span asp-validation-for="ExpirationDate" class="text-danger"></span>
         </div>
+    </div>
+
+    <div class="row g-3 mt-0">
+        <div class="col-md-3">
+            <label asp-for="Size" class="form-label ap-form-label">Beden</label>
+            <input asp-for="Size" class="form-control ap-form-input" placeholder="M / 38 / 30" />
+            <span asp-validation-for="Size" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Gender" class="form-label ap-form-label">Cinsiyet</label>
+            <select asp-for="Gender" class="form-select ap-form-input">
+                <option value="">Seçiniz</option>
+                <option>Kadın</option>
+                <option>Erkek</option>
+                <option>Unisex</option>
+            </select>
+            <span asp-validation-for="Gender" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="AgeGroup" class="form-label ap-form-label">Yaş Grubu</label>
+            <select asp-for="AgeGroup" class="form-select ap-form-input">
+                <option value="">Seçiniz</option>
+                <option>Bebek</option>
+                <option>Çocuk</option>
+                <option>Genç</option>
+                <option>Yetişkin</option>
+            </select>
+            <span asp-validation-for="AgeGroup" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Condition" class="form-label ap-form-label">Durum</label>
+            <select asp-for="Condition" class="form-select ap-form-input">
+                <option value="">Seçiniz</option>
+                <option>Yeni Gibi</option>
+                <option>İyi</option>
+                <option>Orta</option>
+                <option>Tamire İhtiyaç Var</option>
+            </select>
+            <span asp-validation-for="Condition" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-0">
         <div class="col-md-6">
-            <label asp-for="Location" class="form-label ap-form-label">Konum</label>
-            <input asp-for="Location" class="form-control ap-form-input" placeholder="Örn: Üsküdar" />
-            <div class="form-text">İlçe/semt bilgisi yazman eşleşmeyi iyileştirir.</div>
+            <label asp-for="Location" class="form-label ap-form-label">Açık Konum</label>
+            <input asp-for="Location" class="form-control ap-form-input" placeholder="Örn: Ayancık Merkez, Pazar Yeri yanı" />
             <span asp-validation-for="Location" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="District" class="form-label ap-form-label">İlçe / Mahalle</label>
+            <input asp-for="District" class="form-control ap-form-input" placeholder="Örn: Cevizli Mahallesi" />
+            <span asp-validation-for="District" class="text-danger"></span>
         </div>
     </div>
 
     <div class="mt-3">
-        <label asp-for="Photo" class="form-label ap-form-label">Fotoğraf</label>
-        <input asp-for="Photo" class="form-control ap-form-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-        <small class="ap-form-help">En fazla 5 MB. Desteklenen formatlar: JPG, PNG, WEBP.</small>
+        <label asp-for="ContactNote" class="form-label ap-form-label">Teslim / İletişim Notu</label>
+        <textarea asp-for="ContactNote" class="form-control ap-form-input ap-no-resize" rows="3" placeholder="Uygun olduğunuz saat aralığı veya belediyeye iletmek istediğiniz not."></textarea>
+        <span asp-validation-for="ContactNote" class="text-danger"></span>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(Model.ExistingPhotoPath))
+    <div class="mt-3">
+        <label asp-for="Photos" class="form-label ap-form-label">Fotoğraflar</label>
+        <input asp-for="Photos" class="form-control ap-form-input" type="file" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+        <small class="ap-form-help">En fazla 6 fotoğraf. Desteklenen formatlar: JPG, PNG, WEBP.</small>
+        <span asp-validation-for="Photos" class="text-danger"></span>
+    </div>
+
+    @if (showExistingPhotos && Model.ExistingPhotoPaths.Any())
     {
         <div class="mt-3">
-            <p class="mb-2 fw-semibold">Mevcut Fotoğraf</p>
-            <img src="@Model.ExistingPhotoPath" alt="Mevcut fotoğraf" class="ap-upload-preview" />
+            <p class="mb-2 fw-semibold">Mevcut Fotoğraflar</p>
+            <div class="d-flex flex-wrap gap-3">
+                @foreach (var photoPath in Model.ExistingPhotoPaths)
+                {
+                    <img src="@photoPath" alt="Mevcut fotoğraf" class="ap-upload-preview" />
+                }
+            </div>
         </div>
     }
 </div>
-

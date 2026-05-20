@@ -1,118 +1,82 @@
-﻿@model IReadOnlyCollection<Listing>
+@model IReadOnlyCollection<Listing>
 @{
     var activeOnly = ViewBag.ActiveOnly as bool? == true;
-    ViewData["Title"] = "İlanlarım";
-    Layout = "_UserLayout";
-
-    var totalCount = Model.Count;
-    var activeCount = Model.Count(x => x.Status == ListingStatus.Active);
-    var passiveCount = Model.Count(x => x.Status != ListingStatus.Active);
-    var expiringSoonCount = Model.Count(x => x.Status == ListingStatus.Active && x.ExpirationDate.Date <= DateTime.UtcNow.Date.AddDays(3));
+    ViewData["Title"] = "Belediye İlanları";
+    Layout = "_AdminLayout";
 }
 
 <section class="ap-page-head">
     <div>
-        <h1 class="ap-title">@(activeOnly ? "Aktif İlanlarım" : "İlanlarım")</h1>
-        <p class="ap-subtitle">@(activeOnly ? "Sadece aktif ilanlarını görüntülüyorsun." : "Yayınladığın ilanları buradan yönetebilirsin.")</p>
+        <h1 class="ap-title">@(activeOnly ? "Aktif Belediye İlanları" : "Belediye İlanları")</h1>
+        <p class="ap-subtitle">Belediye tarafından yönetilen ilanları buradan takip edebilirsin.</p>
     </div>
     <div class="d-flex gap-2">
         @if (activeOnly)
         {
-            <a asp-action="MyListings" class="btn ap-btn-outline">Tüm İlanlarım</a>
+            <a asp-action="MyListings" class="btn ap-btn-outline">Tüm İlanlar</a>
         }
         else
         {
-            <a asp-action="MyListings" asp-route-activeOnly="true" class="btn ap-btn-outline">Aktif İlanlarım</a>
+            <a asp-action="MyListings" asp-route-activeOnly="true" class="btn ap-btn-outline">Sadece Aktifler</a>
         }
         <a asp-action="Create" class="btn ap-btn-primary">+ Yeni İlan</a>
     </div>
 </section>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">Toplam</small>
-            <div class="h4 mb-0 mt-2">@totalCount</div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">Aktif</small>
-            <div class="h4 mb-0 mt-2 text-success">@activeCount</div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">Pasif / Tamamlandı</small>
-            <div class="h4 mb-0 mt-2">@passiveCount</div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="ap-card p-3 h-100">
-            <small class="text-uppercase text-muted fw-semibold">3 Gün İçinde Bitecek</small>
-            <div class="h4 mb-0 mt-2 text-warning">@expiringSoonCount</div>
-        </div>
-    </div>
-</div>
-
 @if (!Model.Any())
 {
-    <div class="ap-empty">Henüz ilan eklemedin. İlk ilanını oluşturabilirsin.</div>
+    <div class="ap-empty">Henüz belediye ilanı bulunmuyor.</div>
 }
 else
 {
-    <div class="ap-card p-3">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0 ap-table">
-                <thead>
-                    <tr>
-                        <th>Başlık</th>
-                        <th>Konum</th>
-                        <th>Durum</th>
-                        <th>Son Tarih</th>
-                        <th class="text-end">İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
-                    var isEditable = item.Status == ListingStatus.Active;
-                    var statusClass = item.Status switch
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            var coverPhoto = item.Photos.OrderBy(x => x.SortOrder).Select(x => x.PhotoPath).FirstOrDefault() ?? item.PhotoPath;
+            var statusClass = item.Status switch
+            {
+                ListingStatus.Active => "ap-pill ap-pill-active",
+                ListingStatus.Completed => "ap-pill ap-pill-completed",
+                ListingStatus.Expired => "ap-pill ap-pill-danger",
+                _ => "ap-pill ap-pill-pending"
+            };
+
+            <div class="col-md-6 col-xl-4">
+                <article class="ap-card p-3 h-100 d-flex flex-column gap-3">
+                    @if (!string.IsNullOrWhiteSpace(coverPhoto))
                     {
-                        ListingStatus.Active => "ap-pill ap-pill-active",
-                        ListingStatus.Completed => "ap-pill ap-pill-completed",
-                        ListingStatus.Expired => "ap-pill ap-pill-danger",
-                        _ => "ap-pill ap-pill-pending"
-                    };
+                        <img src="@coverPhoto" alt="@item.Title" class="w-100 rounded-3" style="height: 200px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-content-center align-items-center rounded-3 bg-light text-muted" style="height: 200px;">Fotoğraf yok</div>
+                    }
 
-                    <tr>
-                        <td>
-                            <div class="fw-semibold">@item.Title</div>
-                            <small class="text-muted">Yayın: @item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</small>
-                        </td>
-                        <td>@item.Location</td>
-                        <td><span class="@statusClass">@item.Status.ToDisplayText()</span></td>
-                        <td>@item.ExpirationDate.ToString("dd.MM.yyyy")</td>
-                        <td class="text-end">
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm ap-btn-outline">Detay</a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="@statusClass">@item.Status.ToDisplayText()</span>
+                        <small class="text-muted">@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</small>
+                    </div>
 
-                            @if (isEditable)
-                            {
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm ap-btn-outline">Düzenle</a>
-                            }
-                            else
-                            {
-                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Kapanan veya tamamlanan ilan düzenlenemez.">Düzenle</button>
-                            }
+                    <div>
+                        <h2 class="h5 mb-1">@item.Title</h2>
+                        <div class="text-muted small">@item.Category • @(item.Size ?? "Beden yok")</div>
+                        <div class="text-muted small">@(item.District ?? item.Location)</div>
+                    </div>
 
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Sil</a>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+                    <div class="d-flex gap-2 mt-auto">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm ap-btn-outline">Detay</a>
+                        @if (item.Status == ListingStatus.Active)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm ap-btn-outline">Düzenle</a>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Düzenle</button>
+                        }
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Sil</a>
+                    </div>
+                </article>
+            </div>
+        }
     </div>
 }
-
-

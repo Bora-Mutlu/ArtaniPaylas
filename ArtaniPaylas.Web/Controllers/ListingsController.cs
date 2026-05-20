@@ -1,13 +1,11 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Enums;
 using ArtaniPaylas.Core.Interfaces;
 using ArtaniPaylas.Core.ViewModels;
 using ArtaniPaylas.Data;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace ArtaniPaylas.Web.Controllers;
@@ -17,6 +15,7 @@ public class ListingsController : Controller
     private static readonly string[] AllowedPhotoExtensions = [".jpg", ".jpeg", ".png", ".webp"];
     private static readonly string[] AllowedPhotoContentTypes = ["image/jpeg", "image/png", "image/webp"];
     private const long MaxPhotoSizeBytes = 5 * 1024 * 1024;
+    private const int MaxPhotoCount = 6;
 
     private readonly ApplicationDbContext _context;
     private readonly IListingStatusService _listingStatusService;
@@ -36,42 +35,9 @@ public class ListingsController : Controller
     }
 
     [AllowAnonymous]
-    public async Task<IActionResult> Index(ListingsFilterViewModel filter)
+    public IActionResult Index()
     {
-        await _listingStatusService.UpdateExpiredListingsAsync();
-
-        var query = _context.Listings
-            .Include(x => x.OwnerUser)
-            .AsQueryable();
-
-        if (filter.ActiveOnly)
-        {
-            query = query.Where(x => x.Status == ListingStatus.Active);
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.SearchTitle))
-        {
-            var searchTitle = filter.SearchTitle.Trim();
-            query = query.Where(x => x.Title.Contains(searchTitle));
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.SearchLocation))
-        {
-            var searchLocation = filter.SearchLocation.Trim();
-            query = query.Where(x => x.Location.Contains(searchLocation));
-        }
-
-        var listings = await query
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-
-        var model = new ListingsIndexViewModel
-        {
-            Filter = filter,
-            Listings = listings
-        };
-
-        return View(model);
+        return RedirectToAction("Index", "Home", null, "listings");
     }
 
     [AllowAnonymous]
@@ -81,7 +47,8 @@ public class ListingsController : Controller
 
         var listing = await _context.Listings
             .Include(x => x.OwnerUser)
-            .Include(x => x.Requests)
+            .Include(x => x.Photos.OrderBy(p => p.SortOrder))
+            .Include(x => x.Requests.OrderByDescending(r => r.CreatedAt))
             .ThenInclude(x => x.RequesterUser)
             .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -93,14 +60,14 @@ public class ListingsController : Controller
         return View(listing);
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         return View(new ListingCreateEditViewModel());
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ListingCreateEditViewModel model)
     {
@@ -110,7 +77,6 @@ public class ListingsController : Controller
             return Challenge();
         }
 
-        // Email verification check
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null || !user.EmailConfirmedAt.HasValue)
         {
@@ -128,39 +94,56 @@ public class ListingsController : Controller
             OwnerUserId = userId,
             Title = model.Title,
             Description = model.Description,
+            Category = model.Category,
+            Size = NormalizeText(model.Size),
+            Gender = NormalizeText(model.Gender),
+            AgeGroup = NormalizeText(model.AgeGroup),
+            Condition = NormalizeText(model.Condition),
             ExpirationDate = NormalizeExpirationDateToUtc(model.ExpirationDate),
             Location = model.Location,
+            District = NormalizeText(model.District),
+            ContactNote = NormalizeText(model.ContactNote),
             Status = ListingStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
 
-        var (photoPath, photoError) = await SavePhotoAsync(model.Photo);
+        var (savedPhotos, photoError) = await SavePhotosAsync(model.Photos);
         if (!string.IsNullOrWhiteSpace(photoError))
         {
-            ModelState.AddModelError(nameof(model.Photo), photoError);
+            ModelState.AddModelError(nameof(model.Photos), photoError);
             return View(model);
         }
 
-        listing.PhotoPath = photoPath;
+        listing.PhotoPath = savedPhotos.FirstOrDefault();
+        listing.Photos = savedPhotos
+            .Select((path, index) => new ListingPhoto
+            {
+                PhotoPath = path,
+                SortOrder = index
+            })
+            .ToList();
 
         _context.Listings.Add(listing);
         await _context.SaveChangesAsync();
         await NotifySubscribersForNewListingAsync(listing, userId);
 
-        TempData["SuccessMessage"] = "İlan oluşturuldu.";
-        return RedirectToAction(nameof(MyListings));
+        TempData["SuccessMessage"] = "Kıyafet ilanı yayınlandı.";
+        return RedirectToAction("Listings", "Admin");
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
     {
-        var listing = await _context.Listings.FirstOrDefaultAsync(x => x.Id == id);
+        var listing = await _context.Listings
+            .Include(x => x.Photos.OrderBy(p => p.SortOrder))
+            .FirstOrDefaultAsync(x => x.Id == id);
+
         if (listing is null)
         {
             return NotFound();
         }
 
-        if (!IsOwner(listing))
+        if (!CanManageListing())
         {
             return Forbid();
         }
@@ -176,16 +159,40 @@ public class ListingsController : Controller
             Id = listing.Id,
             Title = listing.Title,
             Description = listing.Description,
+            Category = listing.Category,
+            Size = listing.Size,
+            Gender = listing.Gender,
+            AgeGroup = listing.AgeGroup,
+            Condition = listing.Condition,
             ExpirationDate = listing.ExpirationDate,
             Location = listing.Location,
-            ExistingPhotoPath = listing.PhotoPath
+            District = listing.District,
+            ContactNote = listing.ContactNote,
+            ExistingPhotoPaths = listing.Photos.Select(x => x.PhotoPath).ToList(),
+            ExistingPhotos = listing.Photos
+                .Select(x => new ExistingListingPhotoViewModel
+                {
+                    Id = x.Id,
+                    PhotoPath = x.PhotoPath
+                })
+                .ToList()
         };
+
+        if (model.ExistingPhotoPaths.Count == 0 && !string.IsNullOrWhiteSpace(listing.PhotoPath))
+        {
+            model.ExistingPhotoPaths.Add(listing.PhotoPath);
+            model.ExistingPhotos.Add(new ExistingListingPhotoViewModel
+            {
+                Id = 0,
+                PhotoPath = listing.PhotoPath
+            });
+        }
 
         return View(model);
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, ListingCreateEditViewModel model)
     {
@@ -194,13 +201,16 @@ public class ListingsController : Controller
             return BadRequest();
         }
 
-        var listing = await _context.Listings.FirstOrDefaultAsync(x => x.Id == id);
+        var listing = await _context.Listings
+            .Include(x => x.Photos.OrderBy(p => p.SortOrder))
+            .FirstOrDefaultAsync(x => x.Id == id);
+
         if (listing is null)
         {
             return NotFound();
         }
 
-        if (!IsOwner(listing))
+        if (!CanManageListing())
         {
             return Forbid();
         }
@@ -213,35 +223,124 @@ public class ListingsController : Controller
 
         if (!ModelState.IsValid)
         {
-            model.ExistingPhotoPath = listing.PhotoPath;
+            PopulateExistingPhotos(model, listing);
             return View(model);
         }
 
         listing.Title = model.Title;
         listing.Description = model.Description;
+        listing.Category = model.Category;
+        listing.Size = NormalizeText(model.Size);
+        listing.Gender = NormalizeText(model.Gender);
+        listing.AgeGroup = NormalizeText(model.AgeGroup);
+        listing.Condition = NormalizeText(model.Condition);
         listing.ExpirationDate = NormalizeExpirationDateToUtc(model.ExpirationDate);
         listing.Location = model.Location;
+        listing.District = NormalizeText(model.District);
+        listing.ContactNote = NormalizeText(model.ContactNote);
 
-        var (newPhotoPath, photoError) = await SavePhotoAsync(model.Photo);
-        if (!string.IsNullOrWhiteSpace(photoError))
+        var deletedPhotoIds = model.DeletedPhotoIds.Distinct().ToHashSet();
+        var photosToDelete = listing.Photos
+            .Where(x => deletedPhotoIds.Contains(x.Id))
+            .ToList();
+        var clearLegacyPhotoPath = deletedPhotoIds.Contains(0) && listing.Photos.Count == 0 && !string.IsNullOrWhiteSpace(listing.PhotoPath);
+        var remainingPhotoCount = listing.Photos.Count - photosToDelete.Count + model.Photos.Count(x => x.Length > 0);
+
+        if (clearLegacyPhotoPath)
         {
-            ModelState.AddModelError(nameof(model.Photo), photoError);
-            model.ExistingPhotoPath = listing.PhotoPath;
+            remainingPhotoCount--;
+        }
+
+        if (remainingPhotoCount > MaxPhotoCount)
+        {
+            ModelState.AddModelError(nameof(model.Photos), $"Bir ilanda en fazla {MaxPhotoCount} fotoğraf olabilir. Önce mevcut fotoğraflardan bazılarını kaldır.");
+            PopulateExistingPhotos(model, listing);
             return View(model);
         }
 
-        if (!string.IsNullOrWhiteSpace(newPhotoPath))
+        if (remainingPhotoCount <= 0)
         {
-            listing.PhotoPath = newPhotoPath;
+            ModelState.AddModelError(nameof(model.Photos), "İlanda en az bir fotoğraf kalmalı veya yeni fotoğraf yüklemelisin.");
+            PopulateExistingPhotos(model, listing);
+            return View(model);
         }
+
+        var (newPhotoPaths, photoError) = await SavePhotosAsync(model.Photos);
+        if (!string.IsNullOrWhiteSpace(photoError))
+        {
+            ModelState.AddModelError(nameof(model.Photos), photoError);
+            PopulateExistingPhotos(model, listing);
+            return View(model);
+        }
+
+        var pathsToDelete = photosToDelete.Select(x => x.PhotoPath).ToList();
+
+        foreach (var photo in photosToDelete)
+        {
+            listing.Photos.Remove(photo);
+            _context.ListingPhotos.Remove(photo);
+        }
+
+        if (clearLegacyPhotoPath)
+        {
+            pathsToDelete.Add(listing.PhotoPath!);
+            listing.PhotoPath = null;
+        }
+
+        if (newPhotoPaths.Count > 0)
+        {
+            var startOrder = listing.Photos.Any() ? listing.Photos.Max(x => x.SortOrder) + 1 : 0;
+            foreach (var item in newPhotoPaths.Select((path, index) => new ListingPhoto
+                     {
+                         ListingId = listing.Id,
+                         PhotoPath = path,
+                         SortOrder = startOrder + index
+                     }))
+            {
+                listing.Photos.Add(item);
+            }
+        }
+
+        listing.PhotoPath = listing.Photos
+            .OrderBy(x => x.SortOrder)
+            .Select(x => x.PhotoPath)
+            .FirstOrDefault() ?? listing.PhotoPath;
 
         await _context.SaveChangesAsync();
 
+        foreach (var path in pathsToDelete)
+        {
+            DeletePhotoFile(path);
+        }
+
         TempData["SuccessMessage"] = "İlan güncellendi.";
-        return RedirectToAction(nameof(MyListings));
+        return RedirectToAction("Listings", "Admin");
     }
 
-    [Authorize]
+    private static void PopulateExistingPhotos(ListingCreateEditViewModel model, Listing listing)
+    {
+        model.ExistingPhotos = listing.Photos
+            .OrderBy(x => x.SortOrder)
+            .Select(x => new ExistingListingPhotoViewModel
+            {
+                Id = x.Id,
+                PhotoPath = x.PhotoPath
+            })
+            .ToList();
+        model.ExistingPhotoPaths = model.ExistingPhotos.Select(x => x.PhotoPath).ToList();
+
+        if (model.ExistingPhotos.Count == 0 && !string.IsNullOrWhiteSpace(listing.PhotoPath))
+        {
+            model.ExistingPhotos.Add(new ExistingListingPhotoViewModel
+            {
+                Id = 0,
+                PhotoPath = listing.PhotoPath
+            });
+            model.ExistingPhotoPaths.Add(listing.PhotoPath);
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var listing = await _context.Listings.FirstOrDefaultAsync(x => x.Id == id);
@@ -250,7 +349,7 @@ public class ListingsController : Controller
             return NotFound();
         }
 
-        if (!IsOwner(listing))
+        if (!CanManageListing())
         {
             return Forbid();
         }
@@ -259,7 +358,7 @@ public class ListingsController : Controller
     }
 
     [HttpPost, ActionName("Delete")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
@@ -269,7 +368,7 @@ public class ListingsController : Controller
             return NotFound();
         }
 
-        if (!IsOwner(listing))
+        if (!CanManageListing())
         {
             return Forbid();
         }
@@ -278,22 +377,17 @@ public class ListingsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "İlan silindi.";
-        return RedirectToAction(nameof(MyListings));
+        return RedirectToAction("Listings", "Admin");
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> MyListings(bool activeOnly = false)
     {
         await _listingStatusService.UpdateExpiredListingsAsync();
 
-        var userId = GetCurrentUserId();
-        if (userId is null)
-        {
-            return Challenge();
-        }
-
         var query = _context.Listings
-            .Where(x => x.OwnerUserId == userId);
+            .Include(x => x.Photos.OrderBy(p => p.SortOrder))
+            .AsQueryable();
 
         if (activeOnly)
         {
@@ -374,7 +468,7 @@ public class ListingsController : Controller
         _context.Reports.Add(report);
         await _context.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = "Şikayetiniz admin ekibine iletildi.";
+        TempData["SuccessMessage"] = "Şikayetiniz belediye yönetimine iletildi.";
 
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
@@ -389,46 +483,81 @@ public class ListingsController : Controller
         return listing.OwnerUserId == GetCurrentUserId();
     }
 
+    private bool CanManageListing()
+    {
+        return User.IsInRole("Admin");
+    }
+
     private string? GetCurrentUserId()
     {
         return User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 
-    private async Task<(string? PhotoPath, string? Error)> SavePhotoAsync(IFormFile? photo)
+    private async Task<(List<string> PhotoPaths, string? Error)> SavePhotosAsync(IReadOnlyCollection<IFormFile>? photos)
     {
-        if (photo is null || photo.Length == 0)
+        var savedPaths = new List<string>();
+        if (photos is null || photos.Count == 0)
         {
-            return (null, null);
+            return (savedPaths, null);
         }
 
-        if (photo.Length > MaxPhotoSizeBytes)
+        if (photos.Count > MaxPhotoCount)
         {
-            return (null, "Fotoğraf en fazla 5 MB olabilir.");
+            return (savedPaths, $"En fazla {MaxPhotoCount} fotoğraf yükleyebilirsin.");
         }
 
         var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "listings");
         Directory.CreateDirectory(uploadsPath);
 
-        var extension = Path.GetExtension(photo.FileName);
-        if (string.IsNullOrWhiteSpace(extension) ||
-            !AllowedPhotoExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        foreach (var photo in photos.Where(x => x.Length > 0))
         {
-            return (null, "Sadece JPG, PNG ve WEBP dosyaları yükleyebilirsin.");
+            if (photo.Length > MaxPhotoSizeBytes)
+            {
+                return (new List<string>(), "Her fotoğraf en fazla 5 MB olabilir.");
+            }
+
+            var extension = Path.GetExtension(photo.FileName);
+            if (string.IsNullOrWhiteSpace(extension) ||
+                !AllowedPhotoExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+            {
+                return (new List<string>(), "Sadece JPG, PNG ve WEBP dosyaları yükleyebilirsin.");
+            }
+
+            if (string.IsNullOrWhiteSpace(photo.ContentType) ||
+                !AllowedPhotoContentTypes.Contains(photo.ContentType, StringComparer.OrdinalIgnoreCase))
+            {
+                return (new List<string>(), "Geçersiz dosya tipi tespit edildi.");
+            }
+
+            var fileName = $"{Guid.NewGuid()}{extension}";
+            var fullPath = Path.Combine(uploadsPath, fileName);
+
+            await using var stream = new FileStream(fullPath, FileMode.Create);
+            await photo.CopyToAsync(stream);
+
+            savedPaths.Add($"/uploads/listings/{fileName}");
         }
 
-        if (string.IsNullOrWhiteSpace(photo.ContentType) ||
-            !AllowedPhotoContentTypes.Contains(photo.ContentType, StringComparer.OrdinalIgnoreCase))
+        return (savedPaths, null);
+    }
+
+    private void DeletePhotoFile(string? photoPath)
+    {
+        if (string.IsNullOrWhiteSpace(photoPath))
         {
-            return (null, "Geçersiz dosya tipi tespit edildi.");
+            return;
         }
 
-        var fileName = $"{Guid.NewGuid()}{extension}";
-        var fullPath = Path.Combine(uploadsPath, fileName);
+        var relativePath = photoPath.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(_environment.WebRootPath, relativePath));
+        var uploadsRoot = Path.GetFullPath(Path.Combine(_environment.WebRootPath, "uploads", "listings"));
 
-        await using var stream = new FileStream(fullPath, FileMode.Create);
-        await photo.CopyToAsync(stream);
+        if (!fullPath.StartsWith(uploadsRoot, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
+        {
+            return;
+        }
 
-        return ($"/uploads/listings/{fileName}", null);
+        System.IO.File.Delete(fullPath);
     }
 
     private static DateTime NormalizeExpirationDateToUtc(DateTime input)
@@ -438,6 +567,11 @@ public class ListingsController : Controller
         return input.Kind == DateTimeKind.Utc
             ? dateOnly
             : DateTime.SpecifyKind(dateOnly, DateTimeKind.Utc);
+    }
+
+    private static string? NormalizeText(string? input)
+    {
+        return string.IsNullOrWhiteSpace(input) ? null : input.Trim();
     }
 
     private async Task NotifySubscribersForNewListingAsync(Listing listing, string ownerUserId)
@@ -453,12 +587,12 @@ public class ListingsController : Controller
             return;
         }
 
-        var message = $"Yeni ilan eklendi: {listing.Title} - {listing.Location}";
+        var message = $"Yeni kıyafet ilanı eklendi: {listing.Title} - {listing.Location}";
         foreach (var subscriberId in subscribers)
         {
             await _notificationService.CreateNotificationAsync(
                 subscriberId,
-                "Sisteme Yeni İlan Eklendi",
+                "Sisteme Yeni Kıyafet İlanı Eklendi",
                 message,
                 NotificationType.NewListingPublished,
                 listing.Id,
@@ -466,5 +600,3 @@ public class ListingsController : Controller
         }
     }
 }
-
-

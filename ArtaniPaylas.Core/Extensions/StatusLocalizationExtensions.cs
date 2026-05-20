@@ -34,9 +34,9 @@ public static class StatusLocalizationExtensions
         return status switch
         {
             RequestStatus.Pending => "Bekliyor",
-            RequestStatus.Approved => "Onaylandı",
+            RequestStatus.Approved => "Randevu Onaylandı",
             RequestStatus.Rejected => "Reddedildi",
-            RequestStatus.Delivered => "Teslim Edildi",
+            RequestStatus.Delivered => "Tamamlandı",
             _ => status.ToString()
         };
     }

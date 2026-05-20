@@ -8,14 +8,15 @@
 {
     var user = await UserManager.GetUserAsync(User);
     var isAdmin = false;
-    if (user != null) {
+    if (user != null)
+    {
         isAdmin = await UserManager.IsInRoleAsync(user, "Admin");
     }
 
-    if(isAdmin)
+    if (isAdmin)
     {
         <li>
-            <a class="ap-auth-pill ap-auth-admin" href="/Admin">Admin Paneli</a>
+            <a class="ap-auth-pill ap-auth-admin" href="/Admin">Belediye Paneli</a>
         </li>
     }
     else
@@ -28,14 +29,14 @@
     <li>
         <form class="m-0" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
             @Html.AntiForgeryToken()
-            <button type="submit" class="ap-auth-link">Cikis</button>
+            <button type="submit" class="ap-auth-link ap-auth-logout">Cikis</button>
         </form>
     </li>
 }
 else
 {
     <li>
-        <a class="ap-auth-link" asp-area="" asp-controller="Account" asp-action="Register">Kayit Ol</a>
+        <a class="ap-auth-link" asp-area="" asp-controller="Account" asp-action="Login" asp-route-panel="register">Kayit Ol</a>
     </li>
     <li>
         <a class="ap-auth-pill ap-auth-primary" asp-area="" asp-controller="Account" asp-action="Login">Giris Yap</a>
