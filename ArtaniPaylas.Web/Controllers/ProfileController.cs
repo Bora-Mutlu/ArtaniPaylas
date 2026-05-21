@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using ArtaniPaylas.Core.Entities;
 using ArtaniPaylas.Core.Enums;
 using ArtaniPaylas.Core.ViewModels;
@@ -46,31 +46,9 @@ public class ProfileController : Controller
             return Challenge();
         }
 
-        var myListings = await _context.Listings
-            .Where(x => x.OwnerUserId == userId)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-
-        var incoming = await _context.Requests
-            .Include(x => x.RequesterUser)
-            .Include(x => x.Listing)
-            .Where(x => x.Listing != null && x.Listing.OwnerUserId == userId)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-
-        var outgoing = await _context.Requests
-            .Include(x => x.Listing)
-            .ThenInclude(x => x!.OwnerUser)
-            .Where(x => x.RequesterUserId == userId)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-
         var model = new ProfileIndexViewModel
         {
-            User = user,
-            MyListings = myListings,
-            IncomingRequests = incoming,
-            OutgoingRequests = outgoing
+            User = user
         };
 
         return View(model);
@@ -84,13 +62,6 @@ public class ProfileController : Controller
             return Challenge();
         }
 
-        var deliveredIncoming = await _context.Requests
-            .Include(x => x.RequesterUser)
-            .Include(x => x.Listing)
-            .Where(x => x.Status == RequestStatus.Delivered && x.Listing != null && x.Listing.OwnerUserId == userId)
-            .OrderByDescending(x => x.UpdatedAt)
-            .ToListAsync();
-
         var deliveredOutgoing = await _context.Requests
             .Include(x => x.Listing)
             .ThenInclude(x => x!.OwnerUser)
@@ -98,24 +69,9 @@ public class ProfileController : Controller
             .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync();
 
-        var receivedReviews = await _context.Reviews
-            .Include(x => x.FromUser)
-            .Where(x => x.ToUserId == userId)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-
-        var givenReviews = await _context.Reviews
-            .Include(x => x.ToUser)
-            .Where(x => x.FromUserId == userId)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-
         var model = new ProfileHistoryViewModel
         {
-            DeliveredIncomingRequests = deliveredIncoming,
-            DeliveredOutgoingRequests = deliveredOutgoing,
-            ReceivedReviews = receivedReviews,
-            GivenReviews = givenReviews
+            DeliveredOutgoingRequests = deliveredOutgoing
         };
 
         return View(model);

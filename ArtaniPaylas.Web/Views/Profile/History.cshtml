@@ -1,109 +1,61 @@
-﻿@model ProfileHistoryViewModel
+@model ProfileHistoryViewModel
 @{
-    ViewData["Title"] = "Geçmiş İşlemler";
+    ViewData["Title"] = "Geçmiş Randevularım";
     Layout = "_UserLayout";
 }
 
-<section class="ap-page-head">
+<section class="ap-page-head d-flex justify-content-between align-items-center mb-6">
     <div>
-        <h1 class="ap-title">Geçmiş İşlemler</h1>
-        <p class="ap-subtitle">Teslim geçmişi ve değerlendirmeleri tek ekranda gör.</p>
+        <h1 class="ap-title text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">Geçmiş Randevularım</h1>
+        <p class="ap-subtitle mt-2 text-sm sm:text-base text-slate-600">Katıldığın veya tamamlanan geçmiş randevu kayıtların.</p>
     </div>
+    <a asp-action="Index" class="btn ap-btn-outline inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm">Profilime Dön</a>
 </section>
 
-<div class="row g-4">
-    <div class="col-lg-6">
-        <div class="ap-card p-4 h-100">
-            <h2 class="h5 mb-3">Teslim Ettiklerim</h2>
-            @if (!Model.DeliveredIncomingRequests.Any())
-            {
-                <div class="ap-empty">Kayıt bulunmuyor.</div>
-            }
-            else
-            {
-                <ul class="list-group list-group-flush">
-                    @foreach (var item in Model.DeliveredIncomingRequests)
-                    {
-                        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
-                            <span>@item.Listing?.Title - @(item.RequesterUser?.FullName ?? item.RequesterUser?.UserName)</span>
-                            <a asp-controller="Reviews" asp-action="Create" asp-route-requestId="@item.Id" class="btn btn-sm ap-btn-outline">Değerlendir</a>
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-    </div>
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="ap-card p-4 sm:p-5 shadow-lg border border-slate-100 bg-white rounded-3xl">
+            <h2 class="h5 font-black text-slate-900 mb-4 d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-calendar-check text-emerald-600" viewBox="0 0 16 16">
+                    <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
+                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
+                    <path d="M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+                Katıldığım Randevular
+            </h2>
 
-    <div class="col-lg-6">
-        <div class="ap-card p-4 h-100">
-            <h2 class="h5 mb-3">Teslim Aldıklarım</h2>
             @if (!Model.DeliveredOutgoingRequests.Any())
             {
-                <div class="ap-empty">Kayıt bulunmuyor.</div>
+                <div class="ap-empty py-12 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-slate-500">
+                    <p class="mb-0 text-sm sm:text-base">Henüz tamamlanan geçmiş randevu kaydın bulunmuyor.</p>
+                </div>
             }
             else
             {
-                <ul class="list-group list-group-flush">
+                <div class="d-flex flex-column gap-3">
                     @foreach (var item in Model.DeliveredOutgoingRequests)
                     {
-                        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
-                            <span>@item.Listing?.Title - @(item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName)</span>
-                            <a asp-controller="Reviews" asp-action="Create" asp-route-requestId="@item.Id" class="btn btn-sm ap-btn-outline">Değerlendir</a>
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-    </div>
-</div>
+                        var appointmentDateText = item.ConfirmedAppointmentAt?.ToString("dd.MM.yyyy HH:mm") ?? item.RequestedAppointmentAt.ToString("dd.MM.yyyy HH:mm");
+                        var ownerName = item.Listing?.OwnerUser?.FullName ?? item.Listing?.OwnerUser?.UserName ?? "Kullanıcı";
 
-<div class="row g-4 mt-1">
-    <div class="col-lg-6">
-        <div class="ap-card p-4 h-100">
-            <h2 class="h5 mb-3">Aldığım Değerlendirmeler</h2>
-            @if (!Model.ReceivedReviews.Any())
-            {
-                <div class="ap-empty">Henüz değerlendirme yok.</div>
-            }
-            else
-            {
-                <ul class="list-group list-group-flush">
-                    @foreach (var review in Model.ReceivedReviews)
-                    {
-                        <li class="list-group-item">
-                            <strong>@review.Rating/5</strong> - @(review.FromUser?.FullName ?? review.FromUser?.UserName)
-                            @if (!string.IsNullOrWhiteSpace(review.Comment))
-                            {
-                                <div class="text-muted">@review.Comment</div>
-                            }
-                        </li>
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 p-4 rounded-2xl border border-slate-200 bg-slate-50 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200">
+                            <div>
+                                <h3 class="h6 font-black text-slate-900 mb-1">@item.Listing?.Title</h3>
+                                <p class="mb-0 text-sm text-slate-500">
+                                    <span class="fw-semibold">İlan Sahibi:</span> @ownerName
+                                </p>
+                            </div>
+                            <div class="text-sm text-sm-end">
+                                <span class="badge border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-full mb-1 d-inline-block">
+                                    Randevu Tamamlandı
+                                </span>
+                                <p class="mb-0 text-xs text-slate-400">
+                                    Randevu Tarihi: @appointmentDateText
+                                </p>
+                            </div>
+                        </div>
                     }
-                </ul>
-            }
-        </div>
-    </div>
-
-    <div class="col-lg-6">
-        <div class="ap-card p-4 h-100">
-            <h2 class="h5 mb-3">Verdiğim Değerlendirmeler</h2>
-            @if (!Model.GivenReviews.Any())
-            {
-                <div class="ap-empty">Henüz değerlendirme vermedin.</div>
-            }
-            else
-            {
-                <ul class="list-group list-group-flush">
-                    @foreach (var review in Model.GivenReviews)
-                    {
-                        <li class="list-group-item">
-                            <strong>@review.Rating/5</strong> - @(review.ToUser?.FullName ?? review.ToUser?.UserName)
-                            @if (!string.IsNullOrWhiteSpace(review.Comment))
-                            {
-                                <div class="text-muted">@review.Comment</div>
-                            }
-                        </li>
-                    }
-                </ul>
+                </div>
             }
         </div>
     </div>
