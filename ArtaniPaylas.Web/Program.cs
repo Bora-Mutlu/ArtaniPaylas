@@ -135,66 +135,76 @@ else
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.ExecuteSqlRawAsync(
-        @"ALTER TABLE ""AspNetUsers""
-          ADD COLUMN IF NOT EXISTS ""NotifyOnNewListingsByEmail"" boolean NOT NULL DEFAULT FALSE;");
-
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-    if (!await roleManager.RoleExistsAsync("Admin"))
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
     {
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        logger.LogInformation("Veritabanı migration'ları uygulanıyor...");
+        await dbContext.Database.MigrateAsync();
+        logger.LogInformation("Veritabanı migration'ları başarıyla uygulandı.");
+
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        if (!await roleManager.RoleExistsAsync("Admin"))
+        {
+            await roleManager.CreateAsync(new IdentityRole("Admin"));
+        }
+
+        if (!await roleManager.RoleExistsAsync("User"))
+        {
+            await roleManager.CreateAsync(new IdentityRole("User"));
+        }
+
+        var adminEmail = "admin@artanipaylas.com";
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        if (adminUser == null)
+        {
+            adminUser = new ApplicationUser
+            {
+                UserName = adminEmail,
+                Email = adminEmail,
+                EmailConfirmed = true,
+                FullName = "Sistem Yöneticisi",
+                IsActive = true,
+                EmailConfirmedAt = DateTime.UtcNow
+            };
+            var result = await userManager.CreateAsync(adminUser, "Admin123!");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+        }
+        else
+        {
+            var shouldUpdateAdmin = false;
+            if (!adminUser.EmailConfirmed)
+            {
+                adminUser.EmailConfirmed = true;
+                shouldUpdateAdmin = true;
+            }
+
+            if (!adminUser.EmailConfirmedAt.HasValue)
+            {
+                adminUser.EmailConfirmedAt = DateTime.UtcNow;
+                shouldUpdateAdmin = true;
+            }
+
+            if (shouldUpdateAdmin)
+            {
+                await userManager.UpdateAsync(adminUser);
+            }
+
+            if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+            {
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+        }
     }
-
-    if (!await roleManager.RoleExistsAsync("User"))
+    catch (Exception ex)
     {
-        await roleManager.CreateAsync(new IdentityRole("User"));
-    }
-
-    var adminEmail = "admin@artanipaylas.com";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-    if (adminUser == null)
-    {
-        adminUser = new ApplicationUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            EmailConfirmed = true,
-            FullName = "Sistem Y�neticisi",
-            IsActive = true
-        };
-        var result = await userManager.CreateAsync(adminUser, "Admin123!");
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
-    }
-    else
-    {
-        var shouldUpdateAdmin = false;
-        if (!adminUser.EmailConfirmed)
-        {
-            adminUser.EmailConfirmed = true;
-            shouldUpdateAdmin = true;
-        }
-
-        if (!adminUser.EmailConfirmedAt.HasValue)
-        {
-            adminUser.EmailConfirmedAt = DateTime.UtcNow;
-            shouldUpdateAdmin = true;
-        }
-
-        if (shouldUpdateAdmin)
-        {
-            await userManager.UpdateAsync(adminUser);
-        }
-
-        if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-        {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
+        logger.LogError(ex, "Veritabanı migration veya seed işlemi sırasında bir hata oluştu.");
     }
 }
 app.UseForwardedHeaders();

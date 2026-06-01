@@ -20,3 +20,9 @@ ArtaniPaylas.Web/wwwroot/uploads/
 
 # Local exported report artifact
 Artani Paylas - 6 Haftalik Proje Raporu.pdf
+
+# Configuration files (sensitive)
+**/appsettings.json
+**/appsettings.Development.json
+**/appsettings.Production.json
+
